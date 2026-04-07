@@ -1,11 +1,12 @@
 ---
-name: dev-spec-review
+name: spec-review
 description: Review specifications for completeness before implementation. Use when reviewing specs, requirements, or implementation plans to ensure no gaps, overlaps, or ambiguities.
+version: 0.1.0
 ---
 
 ## Source Cache
 
-Before fetching spec data from JIRA/Confluence, check if `claude-output/{id}/dev-spec-review/source.md` already exists.
+Before fetching spec data from JIRA/Confluence, check if `claude-output/{id}/spec-review/source.md` already exists.
 - If it **exists**: ask the user whether to use the cached file or fetch fresh data (overwrite).
 - If it **does not exist**: proceed to fetch from JIRA/Confluence.
 
@@ -15,7 +16,7 @@ Before presenting any implementation plan, run this review and present the plan 
 
 ## Output ID Resolution
 
-Determine `{id}` for output path `claude-output/{id}/dev-spec-review/` using the first match below:
+Determine `{id}` for output path `claude-output/{id}/spec-review/` using the first match below:
 1. JIRA ticket ID in the **arguments** (e.g. `CA-12345`)
 2. JIRA ticket ID found **directly in the spec page body** — only the page retrieved as the primary spec source (e.g. links like `https://...atlassian.net/browse/CA-12345`). Do NOT follow linked pages to find an ID.
 3. Short descriptive kebab-case name derived from the spec title

@@ -1,6 +1,7 @@
 ---
-name: dev-spec-breakdown
+name: spec-breakdown
 description: Decompose spec-review artifacts into coarse tasks. No code investigation — business-level decomposition only.
+version: 0.1.0
 ---
 
 ## Purpose
@@ -10,12 +11,12 @@ Code investigation is deferred to task-implement.
 
 ## Input
 
-- Spec-review artifacts at `claude-output/{id}/dev-spec-review/`
-  (user specifies `{id}` via `/dev-spec-breakdown {id}`)
+- Spec-review artifacts at `claude-output/{id}/spec-review/`
+  (user specifies `{id}` via `/spec-breakdown {id}`)
 
 ## Output
 
-Written to `claude-output/{id}/dev-spec-breakdown/`:
+Written to `claude-output/{id}/spec-breakdown/`:
 
 - `plan.md` — Coarse task list (Phase 1). Format: `references/plan-format.md`
 - `tasks/01-{name}.md` — Coarse task prompt files (Phase 2). Format: `references/task-format.md`
@@ -37,10 +38,10 @@ On re-run, resume position is determined by existing files:
 
 ### Phase 1: Coarse Task Decomposition
 
-Read `claude-output/{id}/dev-spec-review/source.md` as the primary input.
+Read `claude-output/{id}/spec-review/source.md` as the primary input.
 If `source.md` does not exist: stop and prompt the user to run spec-review first.
 
-Read `claude-output/{id}/dev-spec-review/review.md` and check the Verdict:
+Read `claude-output/{id}/spec-review/review.md` and check the Verdict:
 - `FAIL`: stop and prompt the user to resolve all 🔴 Required items in review.md before proceeding.
 - `CONDITIONAL PASS`: warn the user that 🟡 Recommended items remain unresolved, then ask whether to proceed.
 - `PASS` or review.md does not exist: proceed.

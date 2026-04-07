@@ -1,21 +1,22 @@
 ---
-name: dev-task-implement
-description: Investigate codebase, resolve spec gaps, and implement a single coarse task from dev-spec-breakdown output.
+name: task-implement
+description: Investigate codebase, resolve spec gaps, and implement a single coarse task from spec-breakdown output.
+version: 0.1.0
 ---
 
 ## Purpose
 
-Takes a coarse task prompt from dev-spec-breakdown, investigates the codebase scoped to that task,
+Takes a coarse task prompt from spec-breakdown, investigates the codebase scoped to that task,
 resolves spec gaps, and applies implementation code with user approval.
 
 ## Input
 
-- Task prompt at `claude-output/{id}/dev-spec-breakdown/tasks/{nn}-{name}.md`
+- Task prompt at `claude-output/{id}/spec-breakdown/tasks/{nn}-{name}.md`
 - Target codebase
 
 ## Output
 
-Written to `claude-output/{id}/dev-task-implement/`:
+Written to `claude-output/{id}/task-implement/`:
 
 - `{nn}-spec-gaps.md` — Spec gaps found during investigation (only when gaps exist). Format: `references/spec-gaps-format.md`
 - `{nn}-plan.md` — Implementation plan written after gap resolution and approved by user. Format: `references/implementation-plan-format.md`
