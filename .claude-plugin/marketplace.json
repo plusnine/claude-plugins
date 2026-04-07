@@ -1,0 +1,20 @@
+{
+  "name": "plusnine-claude-plugins",
+  "owner": {
+    "name": "plusnine"
+  },
+  "metadata": {
+    "description": "Development workflow plugins for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "dev-workflow",
+      "source": "./plugins/dev-workflow",
+      "description": "Spec review, task breakdown, and implementation skills for structured development",
+      "version": "1.0.0",
+      "author": { "name": "plusnine" },
+      "homepage": "https://github.com/plusnine/claude-plugins",
+      "license": "MIT"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "dev-workflow",
+  "description": "Spec review, task breakdown, and implementation skills for structured development",
+  "version": "1.0.0",
+  "author": {
+    "name": "plusnine"
+  },
+  "homepage": "https://github.com/plusnine/claude-plugins",
+  "license": "MIT"
+}
