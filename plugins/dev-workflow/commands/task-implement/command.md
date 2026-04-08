@@ -12,6 +12,11 @@ Future extension: `/task-implement {id} all`
 
 ## Process
 
+### Step 0: Prerequisites
+
+Verify `claude-output/{id}/spec-review/source.md` exists.
+If not → instruct the user to run `/dev-workflow:spec-review` first and exit.
+
 ### Step 1: Load task
 
 Read `claude-output/{id}/spec-breakdown/tasks/{nn}-*.md`.
@@ -30,7 +35,7 @@ If the investigate agent reports `Area: unknown`:
 1. Present proposed entry points to user
 2. On approval: append to the project root `CLAUDE.md`'s "Investigation Entry Points" section using this format:
    ```
-   ### {subsystem name} (e.g. "リスト面系", "記事面系", or a new name if the area is distinct)
+   ### {subsystem name} (e.g. "list-screen", "detail-screen", or a new name if the area is distinct)
    #### {area name}
    Entry files (read in this order):
    1. `{file}` — {role}
@@ -59,21 +64,40 @@ Apply Sub-task Split Criteria from `task-implement/SKILL.md`:
 - If split needed: propose sub-tasks to user → on confirmation, treat each as a separate implementation unit
 - If ok: proceed
 
+### Step 4.5: Create branch
+
+Create the working branch per `references/pr-guidelines.md` Branch Naming. Inherit the prefix from the parent branch.
+Present branch name to user → **Approval ①**.
+If the branch already exists: confirm with user whether to reuse it.
+Carry-over of uncommitted changes is acceptable; only implementation changes are committed.
+
 ### Step 5: Write plan and apply
 
 Write `claude-output/{id}/task-implement/{nn}-plan.md`.
 Present the plan to the user. Wait for explicit approval before proceeding.
-On approval: Write `claude-output/{id}/task-implement/{nn}-progress.md` listing all files from the plan as ⏳ Pending.
+On approval: Write `claude-output/{id}/task-implement/{nn}-progress.md` per `references/progress-format.md` — branch creation as row 1 (✅ if already done in Step 4.5), all files as ⏳ Pending, plus Commit / Push / Create draft PR rows as ⏳ Pending.
 For each file change (apply in dependency order if Dependencies are specified in the plan):
 1. Apply the change — requires user approval per the Write Safety Gate
 2. On approval: update `{nn}-progress.md` → ✅ Applied
 3. On rejection: update `{nn}-progress.md` → ❌ Rejected, continue to next file
 
-### Step 6: Mark as done
+After all file changes are applied: notify the user and **wait for verification completion**. Do not proceed until the user confirms.
+
+### Step 6: Commit, push, and PR
 
 If ❌ Rejected entries exist: present them to the user before asking for completion.
-Ask the user: "Mark this task as done?"
-On explicit approval: rename `{nn}-progress.md` → `{nn}-done.md`.
+
+1. Analyze actual `git diff` and propose commit grouping per `references/pr-guidelines.md` Commit Guidelines.
+2. Resolve base branch per `references/pr-guidelines.md` Base Branch Resolution.
+3. Check for existing PR via `gh pr list --head {branch}`.
+4. Check repository visibility via `gh repo view --json isPrivate`.
+5. Present unified preview per `references/pr-guidelines.md` Unified Preview Format → **Approval ②**.
+   User may request modifications to commit messages, file grouping, PR title/body via numbered instructions.
+   On approval: execute commit → push → create/update draft PR sequentially.
+   Update `{nn}-progress.md` rows (Commit → ✅, Push → ✅, Create draft PR → ✅) as each completes.
+   User may request separation of push and PR creation steps.
+6. Ask the user: "Mark this task as done?" → **Approval ③**.
+   On explicit approval: rename `{nn}-progress.md` → `{nn}-done.md`.
 
 ## Checkpoint
 
@@ -82,9 +106,14 @@ On re-run, resume position is determined by existing files:
 | State | Resume from |
 |-------|-------------|
 | `{nn}-done.md` exists | Already complete |
-| `{nn}-progress.md` exists & no ⏳ Pending remain | Step 6 (mark as done) |
-| `{nn}-progress.md` exists & ⏳ Pending remain | Step 5 (apply remaining ⏳ Pending files) |
+| `{nn}-skipped.md` exists | Already complete (skipped) |
+| `{nn}-progress.md` exists & all ✅ | Step 6.6 (mark as done) |
+| `{nn}-progress.md` exists & Push ✅, PR ⏳ | Step 6.5 (create PR) |
+| `{nn}-progress.md` exists & Commit ✅, Push ⏳ | Step 6.5 (push) |
+| `{nn}-progress.md` exists & files all ✅, Commit ⏳ | Step 6.1 (verification or unified preview) |
+| `{nn}-progress.md` exists & file ⏳ remain | Step 5 (apply remaining files) |
+| `{nn}-progress.md` exists & branch ⏳ | Step 4.5 (create branch) |
 | `{nn}-plan.md` exists | Step 5 (present plan for approval, write progress.md, start applying) |
 | `{nn}-spec-gaps.md` exists & Status: OPEN | Step 3 (gap resolution loop) |
 | `{nn}-spec-gaps.md` exists & Status: RESOLVED | Step 2 (re-investigate to restore Affected Files; if Area: unknown, also run Step 2b), then Step 4 |
-| Otherwise | Step 2 (investigate) |
+| Otherwise | Step 0 (prerequisites), then Step 2 (investigate) |
