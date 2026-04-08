@@ -2,6 +2,7 @@
 name: task-implement
 description: Investigate codebase, resolve spec gaps, and implement a single coarse task from spec-breakdown output.
 version: 0.2.0
+model: sonnet
 ---
 
 ## Purpose
