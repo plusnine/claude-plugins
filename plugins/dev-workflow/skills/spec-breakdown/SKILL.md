@@ -2,6 +2,7 @@
 name: spec-breakdown
 description: Decompose spec-review artifacts into coarse tasks. No code investigation — business-level decomposition only.
 version: 0.1.0
+model: sonnet
 ---
 
 ## Purpose

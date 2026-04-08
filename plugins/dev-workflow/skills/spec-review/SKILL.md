@@ -2,6 +2,7 @@
 name: spec-review
 description: Review specifications for completeness before implementation. Use when reviewing specs, requirements, or implementation plans to ensure no gaps, overlaps, or ambiguities.
 version: 0.1.0
+model: sonnet
 ---
 
 ## When to Use

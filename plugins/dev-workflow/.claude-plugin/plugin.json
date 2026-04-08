@@ -1,7 +1,7 @@
 {
   "name": "dev-workflow",
   "description": "Spec review, task breakdown, and implementation skills for structured development",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "plusnine"
   },

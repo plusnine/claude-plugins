@@ -24,19 +24,19 @@ A set of skills for structured spec-driven development.
 
 | Skill | Description |
 |-------|-------------|
-| `/dev-workflow:dev-spec-review` | Review specifications for completeness before implementation |
-| `/dev-workflow:dev-spec-breakdown` | Decompose spec-review artifacts into coarse tasks |
-| `/dev-workflow:dev-task-implement` | Investigate codebase, resolve spec gaps, and implement a single task |
+| `/dev-workflow:spec-review` | Review specifications for completeness before implementation |
+| `/dev-workflow:spec-breakdown` | Decompose spec-review artifacts into coarse tasks |
+| `/dev-workflow:task-implement` | Investigate codebase, resolve spec gaps, implement a single task, and create a draft PR |
 
 #### Workflow
 
 ```
-dev-spec-review → dev-spec-breakdown → dev-task-implement
+spec-review → spec-breakdown → task-implement
 ```
 
-1. `/dev-workflow:dev-spec-review` — Review the spec and surface gaps
-2. `/dev-workflow:dev-spec-breakdown {id}` — Decompose into coarse tasks
-3. `/dev-workflow:dev-task-implement` — Implement each task with codebase investigation
+1. `/dev-workflow:spec-review` — Review the spec and surface gaps
+2. `/dev-workflow:spec-breakdown {id}` — Decompose into coarse tasks
+3. `/dev-workflow:task-implement {id} {nn}` — Implement a task and create a draft PR
 
 ## Output
 

@@ -1,17 +1,19 @@
 ---
 name: task-implement
 description: Investigate codebase, resolve spec gaps, and implement a single coarse task from spec-breakdown output.
-version: 0.1.0
+version: 0.2.0
+model: sonnet
 ---
 
 ## Purpose
 
 Takes a coarse task prompt from spec-breakdown, investigates the codebase scoped to that task,
-resolves spec gaps, and applies implementation code with user approval.
+resolves spec gaps, applies implementation code, and creates a draft pull request with user approval.
 
 ## Input
 
 - Task prompt at `claude-output/{id}/spec-breakdown/tasks/{nn}-{name}.md`
+- Spec review source at `claude-output/{id}/spec-review/source.md` (prerequisite)
 - Target codebase
 
 ## Output
@@ -20,20 +22,22 @@ Written to `claude-output/{id}/task-implement/`:
 
 - `{nn}-spec-gaps.md` — Spec gaps found during investigation (only when gaps exist). Format: `references/spec-gaps-format.md`
 - `{nn}-plan.md` — Implementation plan written after gap resolution and approved by user. Format: `references/implementation-plan-format.md`
-- `{nn}-progress.md` — Tracks per-file application status during Step 5. Transient: renamed to `{nn}-done.md` on completion.
-- `{nn}-done.md` — Renamed from `{nn}-progress.md` after user approves completion. Presence indicates task is complete.
+- `{nn}-progress.md` — Tracks branch creation, file application, commit, push, and PR creation status. Format: `references/progress-format.md`. Transient: renamed to `{nn}-done.md` or `{nn}-skipped.md`.
+- `{nn}-done.md` — Renamed from `{nn}-progress.md` after user approves completion. Presence indicates task is complete (implementation + PR created).
+- `{nn}-skipped.md` — Task deemed unnecessary and skipped. Contains reason. No branch or PR created.
 
-### progress.md Format
+## PR Creation Flow
 
-```
-# Progress — Task {nn}: {task name}
+After implementation, the skill creates a draft PR. See `references/pr-guidelines.md` for:
+- Branch naming and base branch resolution
+- Commit guidelines (Semantic Commit Messages, size limits)
+- PR content (template, title format, screenshot rules)
+- Sensitive content handling
 
-| # | File | Status |
-|---|------|--------|
-| 1 | `path/to/file.kt` | ⏳ Pending |
-| 2 | `path/to/new_file.kt` | ✅ Applied |
-| 3 | `path/to/other.kt` | ❌ Rejected |
-```
+## Completion States
+
+- `{nn}-done.md` — implementation complete + PR created
+- `{nn}-skipped.md` — task not needed (reason documented), no branch or PR
 
 ## Sub-task Split Criteria
 
