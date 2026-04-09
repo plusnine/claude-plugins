@@ -1,14 +1,20 @@
 ---
 name: spec-breakdown
-description: Decompose spec-review artifacts into coarse tasks. No code investigation — business-level decomposition only.
-version: 0.1.0
+description: Decompose spec-review or bugfix investigation artifacts into coarse tasks. No code investigation — business-level decomposition only.
+version: 0.2.0
 model: sonnet
 ---
 
 ## Purpose
 
-Transform spec-review artifacts into a coarse task list and task prompts based on business requirements alone.
+Transform spec-review or bugfix investigation artifacts into a coarse task list and task prompts based on business requirements alone.
 Code investigation is deferred to task-implement.
+
+## Input
+
+One of:
+- Spec-review artifacts at `claude-output/{id}/spec-review/source.md`
+- Bugfix investigation report at `claude-output/{id}/bugfix/investigation-report.md` (Status: FINAL)
 
 ## Coarse Task Criteria
 

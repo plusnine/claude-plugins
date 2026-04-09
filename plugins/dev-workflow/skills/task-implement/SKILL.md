@@ -13,7 +13,9 @@ resolves spec gaps, applies implementation code, and creates a draft pull reques
 ## Input
 
 - Task prompt at `claude-output/{id}/spec-breakdown/tasks/{nn}-{name}.md`
-- Spec review source at `claude-output/{id}/spec-review/source.md` (prerequisite)
+- Reference document (one of, in priority order):
+  - `claude-output/{id}/spec-review/source.md` (spec-review flow)
+  - `claude-output/{id}/bugfix/investigation-report.md` (bugfix flow, Status: FINAL)
 - Target codebase
 
 ## Output

@@ -28,7 +28,7 @@ Read the task prompt and investigate the codebase to determine:
    - **Known area**: read the listed entry point files from CLAUDE.md
    - **Unknown area**: read module-level structural files (e.g., `settings.gradle`, feature module `build.gradle`) to identify the affected module, then read the module's Presenter or ViewModel (fall back to Activity/Fragment if neither exists)
 4. Form hypotheses about affected files and changes
-5. Verify hypotheses with at most 3 additional file reads
+5. Verify hypotheses by reading additional files as needed
 6. Report findings
 
 ## Output (returned to command)
