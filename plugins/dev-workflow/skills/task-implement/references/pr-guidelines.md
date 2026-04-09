@@ -20,6 +20,7 @@ Determines the base (merge target) branch for a task's PR:
 
 ## Commit Guidelines
 
+- Language: commit subject must be written in English
 - Format: Semantic Commit Messages — `type: subject` (no scope)
 - Allowed types: `feat`, `fix`, `refactor`, `chore`, `test`, `docs`
 - 1 commit = 1 type — if multiple types apply, split into separate commits
