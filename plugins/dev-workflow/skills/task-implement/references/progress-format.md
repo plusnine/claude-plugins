@@ -16,8 +16,14 @@
 | N+2 | Create draft PR | ⏳ Pending |
 ```
 
+## Single-task case
+
+When there is only one task (single task uses parent branch directly):
+replace the branch row with:
+`| 1 | Verify parent branch {prefix}/{id} | ⏳ Pending |`
+
 ## Status Values
 
 - `⏳ Pending` — not yet executed
 - `✅ Applied` — successfully completed
-- `❌ Rejected` — rejected by user (file changes only)
+- `⏭ Skipped` — explicitly skipped by user (file changes only)
