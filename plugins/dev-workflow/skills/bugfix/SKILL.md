@@ -14,7 +14,7 @@ implement the fix and create a draft pull request.
 
 ## Input
 
-- Ticket ID from BTS/ITS (e.g., QABTS-2310)
+- URL to a bug ticket in BTS/ITS (e.g., `https://your-org.atlassian.net/browse/PROJ-123`)
 - Related ticket ID for the original feature (optional, user-specified)
 - Target codebase with CLAUDE.md containing domain knowledge
 

@@ -1,6 +1,6 @@
 ---
 description: Investigate a bug from BTS/ITS ticket, resolve spec conflicts, and orchestrate spec-breakdown and task-implement for fix implementation.
-argument-hint: "{ticket-id}"
+argument-hint: "{source}"
 ---
 
 All file output must be written in English regardless of content origin.
@@ -8,13 +8,16 @@ User-facing output (messages, previews, etc.) must be in the language specified 
 
 ## Invocation
 
-`/bugfix {ticket-id}`
+`/bugfix {source}`
+
+Where `{source}` is a URL (Jira, Linear, etc.) to the bug ticket.
 
 ## Process
 
 ### Step 0: Fetch ticket
 
-Fetch the ticket content from BTS/ITS using the provided ticket-id.
+Fetch the ticket content from `{source}`.
+Extract the ticket ID from the URL to use as `{ticket-id}` for output paths.
 Present a summary (symptom, expected behavior, actual behavior, reproduction steps) to the user.
 Wait for user approval before proceeding.
 
