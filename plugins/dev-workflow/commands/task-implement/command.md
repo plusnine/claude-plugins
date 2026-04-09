@@ -78,7 +78,7 @@ Apply Sub-task Split Criteria from `task-implement/SKILL.md`:
 
 ### Step 4.5: Create branch
 
-Verify the current branch matches the parent branch pattern `{prefix}/{id}` (e.g. `feature/CA-123`).
+Verify the current branch matches the parent branch pattern `{prefix}/{id}` (e.g. `feature/PROJ-123`).
 If it does not match → exit with message:
 > Parent branch not found. Create and checkout the parent branch first (e.g. `git checkout -b feature/{id}`), then re-run this command.
 

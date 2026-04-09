@@ -30,7 +30,7 @@ On re-run, resume position is determined by existing files:
 Fetch the spec content from `{source}`.
 
 Determine `{id}` for output path `claude-output/{id}/spec-review/` using the first match below:
-1. JIRA ticket ID found **directly in the spec page body** — only the page retrieved as the primary spec source (e.g. links like `https://...atlassian.net/browse/CA-12345`). Do NOT follow linked pages to find an ID.
+1. JIRA ticket ID found **directly in the spec page body** — only the page retrieved as the primary spec source (e.g. links like `https://...atlassian.net/browse/PROJ-12345`). Do NOT follow linked pages to find an ID.
 2. Short descriptive kebab-case name derived from the spec title.
 
 Present the resolved `{id}` to the user for approval before use.
