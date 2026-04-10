@@ -101,3 +101,4 @@ Append entries as issues are resolved. Never delete or overwrite existing entrie
 Rules:
 - `✅ Resolved` — reason required; record who confirmed and what the outcome was. "looks fine" is not acceptable.
 - `🔄 Pending` — reason required; record who is confirming.
+- `Round` — determined by the maximum Round value in existing Resolution Log entries + 1. First round is 1.

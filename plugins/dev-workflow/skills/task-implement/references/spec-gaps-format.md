@@ -6,7 +6,6 @@
 # Spec Gaps — Task {nn}: {task name}
 
 Date: {YYYY-MM-DD}
-Round: {N}
 Status: OPEN | RESOLVED
 ```
 
@@ -50,3 +49,4 @@ Rules:
 - `✅ Resolved` — reason required; record who confirmed and what the outcome was.
 - `🔄 Pending` — reason required; record who is confirming.
 - `🔄 Pending` on 🔴 Required items keeps Status OPEN.
+- `Round` — determined by the maximum Round value in existing Resolution Log entries + 1. First round is 1.

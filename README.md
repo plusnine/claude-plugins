@@ -27,16 +27,25 @@ A set of skills for structured spec-driven development.
 | `/dev-workflow:spec-review` | Review specifications for completeness before implementation |
 | `/dev-workflow:spec-breakdown` | Decompose spec-review artifacts into coarse tasks |
 | `/dev-workflow:task-implement` | Investigate codebase, resolve spec gaps, implement a single task, and create a draft PR |
+| `/dev-workflow:bugfix` | Investigate a bug from a BTS/ITS ticket, resolve spec conflicts, and orchestrate the full fix flow |
 
 #### Workflow
 
 ```
+# Feature development
 spec-review → spec-breakdown → task-implement
+
+# Bug fix
+bugfix → (spec-breakdown → task-implement)
 ```
 
-1. `/dev-workflow:spec-review` — Review the spec and surface gaps
+**Feature development:**
+1. `/dev-workflow:spec-review {source}` — Review the spec and surface gaps
 2. `/dev-workflow:spec-breakdown {id}` — Decompose into coarse tasks
 3. `/dev-workflow:task-implement {id} {nn}` — Implement a task and create a draft PR
+
+**Bug fix:**
+1. `/dev-workflow:bugfix {source}` — Investigate root cause, resolve conflicts, and run the full fix flow automatically
 
 ## Output
 

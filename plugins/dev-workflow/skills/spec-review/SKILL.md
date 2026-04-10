@@ -7,7 +7,7 @@ model: sonnet
 
 ## When to Use
 
-Before presenting any implementation plan, run this review and present the plan only after all checks pass.
+Used to review specifications for completeness before implementation begins.
 
 ## Scope Constraint
 

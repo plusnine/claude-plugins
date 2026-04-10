@@ -1,7 +1,10 @@
 ---
-description: Decompose spec-review artifacts into coarse tasks. No code investigation — business-level decomposition only.
+description: Decompose spec-review or bugfix investigation artifacts into coarse tasks. No code investigation — business-level decomposition only.
 argument-hint: "{id}"
 ---
+
+All file output must be written in English regardless of content origin.
+User-facing output (messages, previews, etc.) must be in the language specified by `language` in `~/.claude/settings.json` (fallback: English).
 
 ## Invocation
 
@@ -9,7 +12,8 @@ argument-hint: "{id}"
 
 ## Input
 
-- Spec-review artifacts at `claude-output/{id}/spec-review/`
+- Spec-review artifacts at `claude-output/{id}/spec-review/`, OR
+- Bugfix investigation report at `claude-output/{id}/bugfix/investigation-report.md` (Status: FINAL)
 
 ## Output
 
@@ -34,15 +38,27 @@ On re-run, resume position is determined by existing files:
 
 ### Phase 1: Coarse Task Decomposition
 
-Read `claude-output/{id}/spec-review/source.md` as the primary input.
-If `source.md` does not exist: stop and prompt the user to run spec-review first.
+Resolve input source in priority order:
+1. `claude-output/{id}/spec-review/source.md` — if found, source-type is `spec-review`
+2. `claude-output/{id}/bugfix/investigation-report.md` (Status: FINAL only; treat missing Status as DRAFT) — if found, source-type is `bugfix`
 
-Read `claude-output/{id}/spec-review/review.md` and check the Verdict:
-- `FAIL`: stop and prompt the user to resolve all 🔴 Required items in review.md before proceeding.
-- `CONDITIONAL PASS`: warn the user that 🟡 Recommended items remain unresolved, then ask whether to proceed.
-- `PASS` or review.md does not exist: proceed.
+If neither exists → exit with message:
+> No input source found. Run one of the following first:
+> - `/dev-workflow:spec-review {spec-url-or-path}` — to start from specification review
+> - `/dev-workflow:bugfix {id}` — to start from bug investigation
 
-Use `review.md` in the same directory as supplementary reference to understand identified gaps and issues.
+If source-type is `spec-review`:
+- Read `source.md` as the primary input.
+- Read `claude-output/{id}/spec-review/review.md` and check the Verdict:
+  - `FAIL`: stop and prompt the user to resolve all 🔴 Required items in review.md before proceeding.
+  - `CONDITIONAL PASS`: warn the user that 🟡 Recommended items remain unresolved, then ask whether to proceed.
+  - `PASS` or review.md does not exist: proceed.
+- Use `review.md` as supplementary reference.
+
+If source-type is `bugfix`:
+- Read `investigation-report.md` as the primary input. Decompose the "What to fix" section.
+- `review.md` check is skipped (not applicable for bugfix flow).
+
 Decompose requirements into coarse tasks based on business intent alone — no code investigation.
 Apply `spec-breakdown` skill criteria when decomposing tasks.
 Present `plan.md` to the user for approval before proceeding to Phase 2.

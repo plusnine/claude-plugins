@@ -8,15 +8,22 @@ Task branches inherit the parent branch's prefix:
 - Multiple tasks: `{prefix}/{id}_{n}` (no zero-padding, e.g. `feature/PROJ-123_1`)
 - Single task: use the parent branch directly as the head branch
 
+### Bugfix flow
+
+The parent branch is created by the bugfix command with prefix `bugfix/`:
+- Multiple tasks: `bugfix/{ticket-id}_{n}`
+- Single task: use `bugfix/{ticket-id}` directly as the head branch
+
 ## Base Branch Resolution
 
 Determines the base (merge target) branch for a task's PR:
 
 1. From `nn - 1`, descend to find the first task with `{nn}-done.md`
 2. Found → use that task's head branch (`{prefix}/{id}_{n}`) as base
-3. Not found → if single task, use `develop` as base; if multiple tasks, use `{prefix}/{id}` as base
-4. `{prefix}/{id}` itself is based on `develop` (default; confirm with user before creation)
-5. If the resolved base branch does not exist on remote, create it (included in unified preview approval)
+3. Not found → if multiple tasks, use `{prefix}/{id}` as base
+4. Not found → use `bugfix/meta.md` `base-branch` if exists, else ask the user which branch to use as base
+5. `{prefix}/{id}` creation: from `bugfix/meta.md` `base-branch` if exists, else ask the user which branch to use (confirm with user before creation)
+6. If the resolved base branch does not exist on remote, create it (included in unified preview approval)
 
 ## Commit Guidelines
 
@@ -33,7 +40,7 @@ Determines the base (merge target) branch for a task's PR:
 - Use the repository's PR template if present (search `.github/pull_request_template.md`)
 - If no template exists, use `pr-default-template.md` (translate section headers per `language` in `~/.claude/settings.json`; fallback: English)
 - PR title: `[{id}] {change summary}` — no commit prefix, no task count
-- Ticket URL and specification URL: extract from `claude-output/{id}/spec-review/source.md`
+- Ticket URL and specification URL: extract from `claude-output/{id}/spec-review/source.md` or `claude-output/{id}/bugfix/meta.md`
 
 ### Screenshot Rules
 
@@ -71,7 +78,7 @@ Present commits and PR content together for approval:
 
 🟢 PR (new) / 🟡 PR (update)
 ━━━━━━━━━━━━━━━━━━━━━━
-Base: {prefix}/{id} (existing) / {prefix}/{id} (new, from develop)
+Base: {prefix}/{id} (existing) / {prefix}/{id} (new, from {base-branch})
 Title: [{id}] change summary
 Body:
 (PR body content)
