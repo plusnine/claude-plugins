@@ -78,6 +78,8 @@ Apply Sub-task Split Criteria from `task-implement/SKILL.md`:
 
 ### Step 4.5: Create branch
 
+Read `references/pr-guidelines.md` (Branch Naming section) before proceeding.
+
 Verify the current branch matches the parent branch pattern `{prefix}/{id}` (e.g. `feature/PROJ-123`).
 If it does not match → exit with message:
 > Parent branch not found. Create and checkout the parent branch first (e.g. `git checkout -b feature/{id}`), then re-run this command.
@@ -102,6 +104,8 @@ For each file change (apply in dependency order if Dependencies are specified in
 After all file changes are applied: notify the user and **wait for verification completion**. Do not proceed until the user confirms.
 
 ### Step 6: Commit, push, and PR
+
+Read `references/pr-guidelines.md` in full before proceeding with any sub-step.
 
 If ⏭ Skipped entries exist: present them to the user before proceeding.
 
