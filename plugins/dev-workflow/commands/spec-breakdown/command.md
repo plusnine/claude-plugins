@@ -4,7 +4,7 @@ argument-hint: "{id}"
 ---
 
 All file output must be written in English regardless of content origin.
-User-facing output (messages, previews, etc.) must be in the language specified by `language` in `~/.claude/settings.json` (fallback: English).
+User-facing output (messages, previews, etc.) must be in the language specified by `language` in `~/.claude/settings.json` (fallback: English). This includes approval preview presentations (plan previews, diff summaries, PR previews): file content stays in English, but all labels, section headers, and descriptions presented to the user must follow the language setting.
 
 ## Invocation
 
