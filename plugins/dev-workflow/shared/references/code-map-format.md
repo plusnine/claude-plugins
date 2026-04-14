@@ -44,7 +44,7 @@ theme persistence	ui/theme/ThemeStore.kt|data/SettingsRepo.kt	a1b2c3d
 
 | Column | Meaning | Constraints |
 |--------|---------|-------------|
-| `concept` | Lowercase natural-language phrase identifying the goal/purpose | No tab, no newline. Normalization: lowercase, kebab/snake → space-separated, trimmed. Task flow: derive from `tasks/{nn}-{task-name}.md` filename with `{nn}-` prefix stripped (e.g., `01-add-dark-mode.md` → `"add dark mode"`). Bugfix flow: derive from ticket summary/title text (human-readable description, not ticket ID) |
+| `concept` | Lowercase natural-language phrase identifying the goal/purpose | No tab, no newline. Normalization: lowercase, kebab/snake → space-separated, trimmed. Task flow: derive from `tasks/{nn}-{task-name}.md` filename with `{nn}-` prefix stripped (e.g., `01-add-dark-mode.md` → `"add dark mode"`). Bugfix flow: derive from ticket summary/title text (human-readable description, not ticket ID); additionally drop trailing period if present |
 | `starting_points` | 1-3 file paths in priority order, pipe-separated | No tab, no newline. `\|` as list separator. Each path relative to repo root. Upper bound 3 — more suggests concept granularity is too coarse |
 | `verified_at` | Short git sha at which this entry was last verified against the codebase | Produced by `git rev-parse --short HEAD` (7 chars minimum, auto-extended if ambiguous). Must match a reachable commit |
 
