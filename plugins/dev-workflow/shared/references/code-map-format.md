@@ -135,6 +135,37 @@ Entries become stale when:
 
 No explicit invalidation pass is required. GC happens naturally on read.
 
+## Metrics Log
+
+A side-effect append-only log at `claude-output/_index/{repo-name}/code-map-metrics.log` records each code-map operation for out-of-band analysis. **The log is never loaded into agent context** — it exists purely for user-driven inspection (grep/awk etc.).
+
+### Format
+
+```
+# code-map-metrics v1
+# cols: timestamp<TAB>op<TAB>counts
+# op: read | write | gc
+# timestamp: ISO 8601 UTC
+# counts: comma-separated key:value pairs (no spaces)
+2026-04-15T10:30:00Z	read	matched:5,verified:3,removed:0,passed:3
+2026-04-15T10:31:12Z	write	appended:1
+2026-04-15T11:00:00Z	read	matched:8,verified:7,removed:1,passed:7
+```
+
+### Write triggers
+
+- **`read`** (after command-side read flow completes, Step 2): record `matched:{N},verified:{M},removed:{S},passed:{K}` — N = keyword hits, M = passed verify, S = stale removals detected, K = entries passed to agent
+- **`write`** (after Step 3.5 / Step 2c append): record `appended:1` (or `appended:0` if skipped due to no starting points / non-git)
+
+### Analysis (user-driven, out-of-band)
+
+- Hit rate proxy: `passed / matched` over time
+- Staleness rate: cumulative `removed` per unit time
+- Warm-up curve: `passed` per read over time (early = low, later = higher as cache grows)
+- Growth rate: `appended` events over time
+
+The plugin writes but never reads this file. Log grows unbounded — users may truncate periodically if size becomes a concern.
+
 ## Versioning
 
 Header line `# code-map v1` declares format version.

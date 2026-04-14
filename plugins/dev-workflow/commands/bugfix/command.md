@@ -61,6 +61,9 @@ Before invoking the agent, load Index Hints from code-map per `../../shared/refe
 
 Surface to user a one-line summary after the read phase: `Index: N hints used (M high, K lower), S stale removed`. If no hints used, `Index: no matches`.
 
+Append a metrics line to `claude-output/_index/{repo-name}/code-map-metrics.log` per `../../shared/references/code-map-format.md` Metrics Log section:
+`{ISO8601-UTC}<TAB>read<TAB>matched:{N},verified:{M},removed:{S},passed:{K}`
+
 Invoke `bugfix:investigate` agent. Pass:
 - The ticket content (summary, reproduction steps, expected/actual behavior)
 - The path to the project root `CLAUDE.md`
@@ -108,6 +111,9 @@ After Approval ②, append a new entry to `claude-output/_index/{repo-name}/code
 Create `claude-output/_index/{repo-name}/` if it does not exist. Skip if the agent returned no Starting Points.
 
 Surface to user after append: `Index: appended '{concept}' → {starting_points} @ {verified_at}`. If skipped, state why (e.g., `Index: skipped — not a git repo` / `Index: skipped — no starting points`).
+
+Append a metrics line to `claude-output/_index/{repo-name}/code-map-metrics.log`:
+`{ISO8601-UTC}<TAB>write<TAB>appended:{1 if appended, 0 if skipped}`
 
 ### Step 3: Invoke spec-breakdown
 
