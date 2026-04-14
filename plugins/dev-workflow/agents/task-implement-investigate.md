@@ -15,35 +15,22 @@ Read the task prompt and investigate the codebase to determine:
 ## Constraints
 
 - **Read-only**: Glob, Grep, Read tools only — no file writes
-- **Scoped**: start from CLAUDE.md's "Investigation Entry Points" section if the task maps to a known area
+- **Scoped**: use CLAUDE.md as the primary source of codebase context
 - **Hypothesis-first**: read a small number of files to form a hypothesis, then verify — no broad scanning
 - **No decisions**: do not evaluate task size or propose sub-task splits — report findings only
 
 ## Investigation Protocol
 
 1. Read the task prompt's "What to implement" and "Investigation hints"
-2. Check CLAUDE.md's "Investigation Entry Points" section for a matching area
-   Match by comparing the task's "What to implement" and "Investigation hints" against the subsystem/area names and their descriptions in the table. Use semantic similarity — exact keyword match is not required.
-3. Read entry point files:
-   - **Known area**: read the listed entry point files from CLAUDE.md
-   - **Unknown area**: use any guidance in the project root `CLAUDE.md` together with build/config markers found via Glob to identify the affected module and its conventional entry files. Report proposed entry points so the orchestrator can surface them to the user for approval before registration.
+2. Read CLAUDE.md for relevant codebase guidance (described areas, conventions, starting points)
+3. Identify starting files — combine any guidance from CLAUDE.md with Glob for build/config markers to locate the affected module and its conventional entry files
 4. Form hypotheses about affected files and changes
 5. Verify hypotheses by reading additional files as needed
 6. Report findings
 
 ## Output (returned to command)
 
-> Role in Proposed Entry Points: brief description of the file's purpose (e.g., "primary entry for {feature}", "data model for {entity}", "{component} handling {flow}").
-
 ```
-### Area
-known | unknown
-
-### Proposed Entry Points (only when area is unknown)
-
-| File | Role |
-|------|------|
-
 ### Affected Files
 
 | # | File | Location | Change Type | Description |

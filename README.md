@@ -99,9 +99,7 @@ Each command is resumable. On re-run with the same `{id}`, resume position is de
 
 ### CLAUDE.md Integration
 
-The investigate agents read the project root `CLAUDE.md` for guidance — both the structured `Investigation Entry Points` section (when present) and any general descriptions of the codebase.
-
-When investigating an area not listed in `Investigation Entry Points`, agents propose new entries. Additions are written only after user approval — never silently.
+The investigate agents read the project root `CLAUDE.md` for codebase context. The plugin does not modify `CLAUDE.md` or require any specific section structure.
 
 ### Language
 
@@ -114,7 +112,7 @@ What this plugin does not do:
 - Auto-merge PRs — all PRs are created as Draft
 - Proceed past unresolved 🔴 Required spec gaps or spec conflicts
 - Decide scope (task splits, file edits, branch creation, commits) without user approval
-- Modify the project root `CLAUDE.md` without user approval
+- Modify the project root `CLAUDE.md`
 
 ## Output
 

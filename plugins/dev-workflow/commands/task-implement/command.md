@@ -35,28 +35,11 @@ If any prerequisite is incomplete → exit with message:
 
 Invoke `task-implement:investigate` agent. Pass:
 - The full content of the task prompt file
-- The path to the project root `CLAUDE.md` (the one containing "Investigation Entry Points"; agent will read it directly)
+- The path to the project root `CLAUDE.md` (agent will read it directly for codebase context)
 
 If the Affected Files list is empty: present the findings to the user and propose skipping this task.
 On confirmation: write `{nn}-skipped.md` with reason and exit.
 On rejection: ask the user how to proceed before continuing.
-
-### Step 2b: Register new entry points (unknown area only)
-
-If the investigate agent reports `Area: unknown`:
-1. Present proposed entry points to user
-2. On approval: append to the project root `CLAUDE.md`'s "Investigation Entry Points" section (create the section if it does not exist) using this format:
-   ```
-   ### {subsystem name} (use a name that matches your codebase's conventions; introduce a new name if the area is distinct)
-   #### {area name}
-   Entry files (read in this order):
-   1. `{file}` — {role}
-
-   Fixed change targets:
-   - {fixed change targets if identified, otherwise "TBD"}
-   ```
-   If the new area fits under an existing subsystem (H3), append under it instead of creating a new H3.
-3. On rejection: proceed without registering
 
 ### Step 3: Gap resolution loop
 
@@ -137,5 +120,5 @@ On re-run, resume position is determined by existing files:
 | `{nn}-progress.md` exists & branch ⏳ | Step 4.5 (create branch) |
 | `{nn}-plan.md` exists | Step 5 (present plan for approval, write progress.md, start applying) |
 | `{nn}-spec-gaps.md` exists & Status: OPEN | Step 3 (gap resolution loop) |
-| `{nn}-spec-gaps.md` exists & Status: RESOLVED | Step 2 (re-investigate to restore Affected Files; if Area: unknown, also run Step 2b), then evaluate new gaps: 🔴 Required → update Status to OPEN, go to Step 3; 🟡/⚪ → present to user, ask proceed or resolve, on proceed go to Step 4, on resolve go to Step 3; none → go to Step 4 |
+| `{nn}-spec-gaps.md` exists & Status: RESOLVED | Step 2 (re-investigate to restore Affected Files), then evaluate new gaps: 🔴 Required → update Status to OPEN, go to Step 3; 🟡/⚪ → present to user, ask proceed or resolve, on proceed go to Step 4, on resolve go to Step 3; none → go to Step 4 |
 | Otherwise | Step 0 (prerequisites), then Step 2 (investigate) |
