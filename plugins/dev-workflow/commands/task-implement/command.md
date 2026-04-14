@@ -23,6 +23,9 @@ If neither exists → exit with message:
 > - `/dev-workflow:spec-review {spec-url-or-path}` — to start from specification review
 > - `/dev-workflow:bugfix {id}` — to start from bug investigation
 
+If `investigation-report.md` exists but Status is DRAFT (or missing): exit with message:
+> Bugfix investigation is not yet finalized. Complete `/dev-workflow:bugfix {id}` through Step 2c first.
+
 ### Step 1: Load task
 
 Read `claude-output/{id}/spec-breakdown/tasks/{nn}-*.md`.
@@ -101,6 +104,8 @@ If ⏭ Skipped entries exist: present them to the user before proceeding.
    Update `{nn}-progress.md` rows (Commit → ✅, Push → ✅, Create draft PR → ✅) as each completes.
    User may request separation of push and PR creation steps.
 6. After Create draft PR completes (all rows in `{nn}-progress.md` ✅), auto-rename `{nn}-progress.md` → `{nn}-done.md`.
+
+On failure of any sub-step (commit / push / `gh pr create`): keep that row as ⏳, append a brief error note (command + error message) to `{nn}-progress.md`, surface the error to the user, and exit. Re-run resumes at that ⏳ row per the Checkpoint table.
 
 ## Checkpoint
 

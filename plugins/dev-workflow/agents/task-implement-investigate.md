@@ -16,6 +16,7 @@ Read the task prompt and investigate the codebase to determine:
 
 - **Read-only**: Glob, Grep, Read tools only — no file writes
 - **Scoped**: use CLAUDE.md as the primary source of codebase context
+- **CLAUDE.md fallback**: if CLAUDE.md is missing or lacks guidance for the relevant area, note this at the top of the output (e.g. "CLAUDE.md: not found, used Glob-based heuristics") and proceed using Glob/Grep on conventional build/config markers
 - **Hypothesis-first**: read a small number of files to form a hypothesis, then verify — no broad scanning
 - **No decisions**: do not evaluate task size or propose sub-task splits — report findings only
 
