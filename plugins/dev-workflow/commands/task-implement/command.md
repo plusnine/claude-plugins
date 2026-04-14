@@ -46,6 +46,8 @@ Before invoking the agent, load Index Hints from code-map per `../../shared/refe
    e. Pass verified entries to the agent as Index Hints (markdown table format, see `../../shared/references/code-map-format.md` "Agent integration")
 3. If code-map does not exist or no hints survived: skip the hints path — no change to agent invocation
 
+Surface to user a one-line summary after the read phase: `Index: N hints used (M high, K lower), S stale removed`. If no hints used, `Index: no matches`.
+
 Invoke `task-implement:investigate` agent. Pass:
 - The full content of the task prompt file
 - The path to the project root `CLAUDE.md` (agent will read it directly for codebase context)
@@ -78,6 +80,8 @@ After Step 3 (investigation validated by the user, either directly or via gap re
 Create `claude-output/_index/{repo-name}/` if it does not exist. Append at end of file (no merge with existing rows; dedup handled at read time).
 
 Skip this step if the agent returned no Starting Points (unlikely, but defensive).
+
+Surface to user after append: `Index: appended '{concept}' → {starting_points} @ {verified_at}`. If skipped, state why (e.g., `Index: skipped — not a git repo` / `Index: skipped — no starting points`).
 
 ### Step 4: Evaluate task size
 

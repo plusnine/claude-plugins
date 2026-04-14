@@ -59,6 +59,8 @@ Before invoking the agent, load Index Hints from code-map per `../../shared/refe
    e. Pass verified entries to the agent as Index Hints (markdown table format, see code-map-format.md "Agent integration")
 3. If code-map does not exist or no hints survived: skip the hints path
 
+Surface to user a one-line summary after the read phase: `Index: N hints used (M high, K lower), S stale removed`. If no hints used, `Index: no matches`.
+
 Invoke `bugfix:investigate` agent. Pass:
 - The ticket content (summary, reproduction steps, expected/actual behavior)
 - The path to the project root `CLAUDE.md`
@@ -104,6 +106,8 @@ After Approval ②, append a new entry to `claude-output/_index/{repo-name}/code
 - `verified_at`: current `git rev-parse --short HEAD`
 
 Create `claude-output/_index/{repo-name}/` if it does not exist. Skip if the agent returned no Starting Points.
+
+Surface to user after append: `Index: appended '{concept}' → {starting_points} @ {verified_at}`. If skipped, state why (e.g., `Index: skipped — not a git repo` / `Index: skipped — no starting points`).
 
 ### Step 3: Invoke spec-breakdown
 
