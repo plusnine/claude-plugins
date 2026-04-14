@@ -33,9 +33,21 @@ If any prerequisite is incomplete → exit with message:
 
 ### Step 2: Investigate
 
+Before invoking the agent, load Index Hints from code-map per `references/code-map-format.md`:
+
+1. If `claude-output/_index/code-map.md` exists:
+   a. Extract keywords from the task prompt (task title tokens + prominent noun phrases from "What to implement")
+   b. Filter entries by case-insensitive substring match on `concept` column
+   c. For each candidate entry, verify:
+      - All paths in `starting_points` exist (remove entry from file if any path missing)
+      - `git diff {verified_at}..HEAD -- {starting_points}` — mark confidence as high (no diff) or lower (has diff)
+   d. Pass verified entries to the agent as Index Hints (markdown table format, see `references/code-map-format.md` "Agent integration")
+2. If code-map does not exist or no hints match: skip the hints path — no change to agent invocation
+
 Invoke `task-implement:investigate` agent. Pass:
 - The full content of the task prompt file
 - The path to the project root `CLAUDE.md` (agent will read it directly for codebase context)
+- Index Hints (if any)
 
 If the Affected Files list is empty: present the findings to the user and propose skipping this task.
 On confirmation: write `{nn}-skipped.md` with reason and exit.
@@ -52,6 +64,18 @@ If 🔴 Required gaps exist:
 4. If the user's resolution requires verifying new code areas: re-invoke `task-implement:investigate` agent, passing the updated spec gaps content alongside the original task prompt
 5. Repeat until no 🔴 Required gaps remain
 6. Update `{nn}-spec-gaps.md` Status to RESOLVED.
+
+### Step 3.5: Update code-map
+
+After Step 3 (investigation validated by the user, either directly or via gap resolution), append a new entry to `claude-output/_index/code-map.md` per `references/code-map-format.md`:
+
+- `concept`: task title from `tasks/{nn}-*.md` filename, normalized (kebab-case → space-separated, lowercase, trimmed)
+- `starting_points`: agent's reported Starting Points (pipe-joined, priority order preserved)
+- `verified_at`: current `git rev-parse --short HEAD`
+
+Create `claude-output/_index/` if it does not exist. Append at end of file (no merge with existing rows; dedup handled at read time).
+
+Skip this step if the agent returned no Starting Points (unlikely, but defensive).
 
 ### Step 4: Evaluate task size
 
