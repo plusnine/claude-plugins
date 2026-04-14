@@ -93,7 +93,7 @@ Command-side flow:
 1. Load `code-map.md` (if it exists). If not, skip the read path entirely — no hints provided.
 2. Extract keywords from the task prompt (task title tokens + prominent noun phrases from "What to implement" or ticket summary)
 3. Filter entries: concept column substring-matches any keyword (case-insensitive)
-4. Deduplicate: if multiple entries share the same `concept`, keep the one with the most recent `verified_at` (by git commit recency); remove older duplicates from the file
+4. Deduplicate: if multiple entries share the same `concept`, keep the one with the most recent `verified_at` (by git commit recency). Tiebreaker for same concept + same verified_at: keep the last-written (bottom-most) row. Remove other duplicates from the file
 5. For each remaining candidate entry, verify:
    - Every path in `starting_points` exists (O(1) existence check)
    - `git diff {verified_at}..HEAD -- {starting_points}` behavior:

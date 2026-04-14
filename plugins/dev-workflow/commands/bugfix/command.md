@@ -52,7 +52,7 @@ Before invoking the agent, load Index Hints from code-map per `../../skills/task
 2. If `claude-output/_index/{repo-name}/code-map.md` exists:
    a. Extract keywords from the ticket (ticket title + prominent noun phrases from symptom/expected/actual)
    b. Filter entries by case-insensitive substring match on `concept` column
-   c. Deduplicate: for each duplicated concept, keep the entry with the most recent `verified_at` (by git commit recency); remove older duplicates from the file
+   c. Deduplicate: for each duplicated concept, keep the entry with the most recent `verified_at` (by git commit recency). Tiebreaker for same verified_at: keep the last-written (bottom-most) row. Remove older duplicates from the file
    d. For each remaining candidate entry, verify:
       - All paths in `starting_points` exist (remove entry from file if any path missing)
       - `git diff {verified_at}..HEAD -- {starting_points}`: success + no diff → high confidence; success + diff → lower confidence; command failure (verified_at unreachable) → remove entry from file
