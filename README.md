@@ -2,15 +2,16 @@
 
 A marketplace of Claude Code plugins for software development workflows.
 
-## Philosophy
+## Design approach
 
-Most AI-assisted development tools are designed around what AI *can* do. This plugin is designed around what AI *gets wrong*.
+The plugin provides commands for spec-driven development and bug-fix workflows, each structured around explicit checkpoints. Every command:
 
-Common failure modes in AI-assisted development — silent gap resolution, state loss across sessions, scope creep during investigation, and unverifiable decision trails — are not edge cases. They are structural. This plugin treats them as first-class design constraints.
+- requires **user approval** at consequential decisions — plan review, per-file changes, commit grouping, PR creation
+- persists state to `claude-output/{id}/` files so interrupted sessions can be resumed
+- blocks forward progress when 🔴 Required spec gaps or spec conflicts remain unresolved
+- delegates code investigation to **read-only agents** separated from code-modifying orchestration
 
-The result is a human-AI collaboration model rather than full automation. Checkpoints surface ambiguities before they compound. Approval gates keep humans in the loop at consequential decisions. Required gaps block progress until resolved. The goal is completion rate, not automation rate.
-
-The plugin ships as a domain-agnostic core. Domain-specific behavior — iOS, Android, or otherwise — is layered in via separate skills and project-local `CLAUDE.md`, keeping the core stable across contexts.
+The plugin's core does not encode domain-specific conventions (build systems, architecture patterns, file extensions). Projects can supply these via the root `CLAUDE.md` (see [CLAUDE.md Integration](#claudemd-integration)); absent that, agents fall back to general codebase heuristics and propose findings for user approval.
 
 ## Install
 
@@ -30,9 +31,9 @@ Then install the plugin:
 
 ### dev-workflow
 
-A set of skills for structured spec-driven development.
+A set of commands for structured spec-driven development.
 
-| Skill | Description |
+| Command | Description |
 |-------|-------------|
 | `/dev-workflow:spec-review` | Review specifications for completeness before implementation |
 | `/dev-workflow:spec-breakdown` | Decompose spec-review artifacts into coarse tasks |
@@ -55,7 +56,7 @@ bugfix → (spec-breakdown → task-implement)
 3. `/dev-workflow:task-implement {id} {nn}` — Implement a task and create a draft PR
 
 **Bug fix:**
-1. `/dev-workflow:bugfix {source}` — Investigate root cause, resolve conflicts, and run the full fix flow automatically
+1. `/dev-workflow:bugfix {source}` — Investigate root cause, resolve conflicts, and orchestrate spec-breakdown and task-implement for the full fix flow (each step requires user approval)
 
 ## Components
 
