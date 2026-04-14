@@ -77,7 +77,7 @@ If 🔴 Required gaps exist:
 
 ### Step 3.5: Update code-map
 
-After Step 3 (investigation validated by the user, either directly or via gap resolution), append a new entry to `claude-output/_index/{repo-name}/code-map.md` per `../../shared/references/code-map-format.md`. Resolve `{repo-name}` fresh per code-map-format.md (`basename $(git rev-parse --show-toplevel)` lowercased; skip this entire step if not in a git repo):
+After Step 3 (investigation validated by the user, either directly or via gap resolution), append a new entry to `claude-output/_index/{repo-name}/code-map.md` per `../../shared/references/code-map-format.md`. Resolve `{repo-name}` fresh per `../../shared/references/code-map-format.md` (`basename $(git rev-parse --show-toplevel)` lowercased; skip this entire step if not in a git repo):
 
 - `concept`: strip the `{nn}-` prefix from `tasks/{nn}-{task-name}.md` filename, then normalize (kebab-case → space-separated, lowercase, trimmed). Example: `01-add-dark-mode.md` → `"add dark mode"`
 - `starting_points`: agent's reported Starting Points (pipe-joined, priority order preserved)
@@ -165,6 +165,10 @@ When `{nn}-spec-gaps.md` exists with Status: RESOLVED, re-invoke Step 2 to resto
 - Only 🟡 Recommended or ⚪ Optional gaps → present to user; go to Step 4 on proceed, Step 3 on resolve
 - No new gaps → go to Step 4
 
-### Note on code-map writes (Step 3.5)
+### Note on code-map reads and writes
 
-Step 3.5 does not produce a persistent state file. Re-runs after resumption may append duplicate entries to `_index/{repo-name}/code-map.md`. Duplicates are harmless: dedup happens at read time (most-recent `verified_at` wins; older rows are removed on next read per `../../shared/references/code-map-format.md` reader contract).
+Code-map operations happen within command steps (read at Step 2, write at Step 3.5) and do not produce their own persistent state files. On resumption:
+
+- Step 2 re-reads the code-map fresh — fresh dedup, fresh GC of stale entries, fresh verification. Idempotent per reader contract
+- Step 3.5 may re-append the same entry — duplicates are harmless: dedup at read time picks the most-recent `verified_at` and removes older rows per `../../shared/references/code-map-format.md` reader contract
+- If any code-map append fails (e.g., filesystem error), re-run simply retries the append; no separate recovery needed
