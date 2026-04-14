@@ -53,21 +53,6 @@ Invoke `bugfix:investigate` agent. Pass:
 
 Write `claude-output/{ticket-id}/bugfix/investigation-report.md` with Status: DRAFT.
 
-If the Affected Area is `unknown`:
-1. Present proposed entry points to user
-2. On approval: append to the project root `CLAUDE.md`'s "Investigation Entry Points" section (create the section if it does not exist) using this format:
-   ```
-   ### {subsystem name}
-   #### {area name}
-   Entry files (read in this order):
-   1. `{file}` — {role}
-
-   Fixed change targets:
-   - {fixed change targets if identified, otherwise "TBD"}
-   ```
-   If the new area fits under an existing subsystem (H3), append under it instead of creating a new H3.
-3. On rejection: proceed without registering
-
 Present root cause and what to fix to user.
 
 ### Step 2b: Conflict resolution loop
@@ -114,18 +99,12 @@ Wait until all tasks reach completion (`{nn}-done.md` or `{nn}-skipped.md` for e
 
 After all tasks complete:
 
-1. **CLAUDE.md update**: Propose additions to the project CLAUDE.md based on investigation findings
-   (entry points, data flows, non-obvious connections discovered during investigation).
-   Do not re-propose entry points already registered in Step 2.
-   Present proposed changes to user → approval required. Declined proposals do not block completion.
+1. **Self-improvement**: Suggest the user run `/self-improvement` for session retrospective.
 
-2. **Self-improvement**: Suggest the user run `/self-improvement` for session retrospective.
-
-3. Write `claude-output/{ticket-id}/bugfix/done.md`:
+2. Write `claude-output/{ticket-id}/bugfix/done.md`:
    ```
    completed: {YYYY-MM-DD}
    tasks: [{nn list}]
-   claude-md-updated: {true | declined}
    ```
 
 ## Checkpoint
