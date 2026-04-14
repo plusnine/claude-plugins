@@ -38,13 +38,7 @@ Downstream output (produced by orchestrated skills):
 
 ## Spec Conflict Priority
 
-Same as task-implement Spec Gap Priority:
-
-| Priority | Meaning | Effect |
-|----------|---------|--------|
-| 🔴 Required | Must be resolved before implementation | Blocks implementation |
-| 🟡 Recommended | Recommended to resolve, may proceed | Does not block |
-| ⚪ Optional | Optional | Does not block |
+Same as `task-implement` Spec Gap Priority (see `skills/task-implement/SKILL.md`).
 
 ## Code Map Integration
 

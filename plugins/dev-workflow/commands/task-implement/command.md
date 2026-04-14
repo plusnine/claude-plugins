@@ -23,6 +23,9 @@ If neither exists → exit with message:
 > - `/dev-workflow:spec-review {spec-url-or-path}` — to start from specification review
 > - `/dev-workflow:bugfix {id}` — to start from bug investigation
 
+If `investigation-report.md` exists but Status is DRAFT (or missing): exit with message:
+> Bugfix investigation is not yet finalized. Complete `/dev-workflow:bugfix {id}` through Step 2c first.
+
 ### Step 1: Load task
 
 Read `claude-output/{id}/spec-breakdown/tasks/{nn}-*.md`.
@@ -97,15 +100,14 @@ Apply Sub-task Split Criteria from `task-implement/SKILL.md`:
 
 ### Step 4.5: Create branch
 
-Read `references/pr-guidelines.md` (Branch Naming section) before proceeding.
+Read `references/pr-guidelines.md` Branch Naming section for rules. This step owns only orchestration — all naming/verification rules live in that file.
 
-Verify the current branch matches the parent branch pattern `{prefix}/{id}` (e.g. `feature/PROJ-123`).
-If it does not match → exit with message:
+Verify the current branch is the parent branch per pr-guidelines.md Branch Naming. If not → exit with message:
 > Parent branch not found. Create and checkout the parent branch first (e.g. `git checkout -b feature/{id}`), then re-run this command.
 
-If this is the only task (single task per `references/pr-guidelines.md` Branch Naming): skip branch creation and use the parent branch as the head branch. Proceed to Step 5.
+If pr-guidelines.md Branch Naming resolves to "use parent branch directly" (single-task case): skip branch creation. Proceed to Step 5.
 
-Create the working branch per `references/pr-guidelines.md` Branch Naming. Inherit the prefix from the parent branch.
+Otherwise, create the working branch per pr-guidelines.md Branch Naming.
 Present branch name to user → **Approval ①**.
 If the branch already exists: confirm with user whether to reuse it.
 Carry-over of uncommitted changes is acceptable; only implementation changes are committed.
@@ -138,6 +140,8 @@ If ⏭ Skipped entries exist: present them to the user before proceeding.
    Update `{nn}-progress.md` rows (Commit → ✅, Push → ✅, Create draft PR → ✅) as each completes.
    User may request separation of push and PR creation steps.
 6. After Create draft PR completes (all rows in `{nn}-progress.md` ✅), auto-rename `{nn}-progress.md` → `{nn}-done.md`.
+
+On failure of any sub-step (commit / push / `gh pr create`): keep that row as ⏳, append a brief error note (command + error message) to `{nn}-progress.md`, surface the error to the user, and exit. Re-run resumes at that ⏳ row per the Checkpoint table.
 
 ## Checkpoint
 
