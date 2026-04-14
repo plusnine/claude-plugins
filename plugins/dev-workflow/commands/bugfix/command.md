@@ -48,15 +48,16 @@ Present branch name to user → **Approval ①**.
 
 Before invoking the agent, load Index Hints from code-map per `../../skills/task-implement/references/code-map-format.md`:
 
-1. Resolve `{repo-name}` per code-map-format.md (`basename $(git rev-parse --show-toplevel)` lowercased; fallback `basename $(pwd)` lowercased)
+1. Resolve `{repo-name}` per code-map-format.md (`basename $(git rev-parse --show-toplevel)` lowercased). If not in a git repo: skip the hints path entirely
 2. If `claude-output/_index/{repo-name}/code-map.md` exists:
    a. Extract keywords from the ticket (ticket title + prominent noun phrases from symptom/expected/actual)
    b. Filter entries by case-insensitive substring match on `concept` column
-   c. For each candidate entry, verify:
+   c. Deduplicate: for each duplicated concept, keep the entry with the most recent `verified_at` (by git commit recency); remove older duplicates from the file
+   d. For each remaining candidate entry, verify:
       - All paths in `starting_points` exist (remove entry from file if any path missing)
-      - `git diff {verified_at}..HEAD -- {starting_points}` — mark confidence as high (no diff) or lower (has diff)
-   d. Pass verified entries to the agent as Index Hints (markdown table format, see code-map-format.md "Agent integration")
-3. If code-map does not exist or no hints match: skip the hints path
+      - `git diff {verified_at}..HEAD -- {starting_points}`: success + no diff → high confidence; success + diff → lower confidence; command failure (verified_at unreachable) → remove entry from file
+   e. Pass verified entries to the agent as Index Hints (markdown table format, see code-map-format.md "Agent integration")
+3. If code-map does not exist or no hints survived: skip the hints path
 
 Invoke `bugfix:investigate` agent. Pass:
 - The ticket content (summary, reproduction steps, expected/actual behavior)
@@ -96,9 +97,9 @@ Update `investigation-report.md`:
 
 Present finalized report to user → **Approval ②**.
 
-After Approval ②, append a new entry to `claude-output/_index/{repo-name}/code-map.md` per `../../skills/task-implement/references/code-map-format.md` ({repo-name} resolved as in Step 2):
+After Approval ②, append a new entry to `claude-output/_index/{repo-name}/code-map.md` per `../../skills/task-implement/references/code-map-format.md`. Resolve `{repo-name}` fresh per code-map-format.md (`basename $(git rev-parse --show-toplevel)` lowercased; skip this entire step if not in a git repo):
 
-- `concept`: ticket title, normalized (lowercase, kebab/snake → space-separated, trimmed)
+- `concept`: ticket summary/title (e.g., Jira "summary" field, Linear "title" field — the human-readable description, not the ticket ID), normalized (lowercase, kebab/snake → space-separated, trimmed, drop trailing period if any). Example: Jira "BUG-123: Password reset link broken" → `"password reset link broken"`
 - `starting_points`: agent's reported Starting Points from investigation-report.md (pipe-joined, priority order preserved)
 - `verified_at`: current `git rev-parse --short HEAD`
 

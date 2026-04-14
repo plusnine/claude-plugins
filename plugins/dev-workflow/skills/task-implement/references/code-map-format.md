@@ -16,12 +16,13 @@ It is NOT a comprehensive method-map or symbol table — it records only **narro
 
 ### `{repo-name}` resolution
 
-`claude-output/` may live at workspace level (parent of multiple repos) or inside a single repo. `{repo-name}` is resolved per-invocation so both layouts are supported:
+`claude-output/` may live at workspace level (parent of multiple repos) or inside a single repo. `{repo-name}` is resolved per-invocation so both layouts are supported.
 
-- Primary: `basename $(git rev-parse --show-toplevel)` lowercased
-- Fallback (non-git working directory): `basename $(pwd)` lowercased
+- `basename $(git rev-parse --show-toplevel)` lowercased
 
 No further normalization — `My_Repo-2` becomes `my_repo-2`. Filesystem-safe, information-preserving.
+
+**Git required**: code-map operations require a git repository (commits are the verification oracle). If `git rev-parse --show-toplevel` fails, skip all code-map read and write operations entirely — the command proceeds without hints and does not persist entries. The plugin as a whole also requires git (branch/commit/PR), so this is consistent with overall assumptions.
 
 Collision note: two distinct repos with identical basename (rare) would share a code-map. Not handled in MVP.
 
@@ -33,7 +34,7 @@ TSV with a minimal header. One record per line.
 # code-map v1
 # cols: concept<TAB>starting_points<TAB>verified_at
 # starting_points: pipe-separated file paths, ordered by entry priority (most useful first)
-# verified_at: git short sha (7 char) at which this entry was last verified
+# verified_at: git short sha (typically 7 chars, auto-extended if ambiguous) at which this entry was last verified
 dark mode toggle	ui/theme/Toggle.kt	a1b2c3d
 auth middleware	server/middleware/Auth.kt	a1b2c3d
 theme persistence	ui/theme/ThemeStore.kt|data/SettingsRepo.kt	a1b2c3d
@@ -43,9 +44,9 @@ theme persistence	ui/theme/ThemeStore.kt|data/SettingsRepo.kt	a1b2c3d
 
 | Column | Meaning | Constraints |
 |--------|---------|-------------|
-| `concept` | Lowercase natural-language phrase identifying the goal/purpose | No tab, no newline. Derived from task title (spec-breakdown flow) or ticket title (bugfix flow), normalized |
+| `concept` | Lowercase natural-language phrase identifying the goal/purpose | No tab, no newline. Normalization: lowercase, kebab/snake → space-separated, trimmed. Task flow: derive from `tasks/{nn}-{task-name}.md` filename with `{nn}-` prefix stripped (e.g., `01-add-dark-mode.md` → `"add dark mode"`). Bugfix flow: derive from ticket summary/title text (human-readable description, not ticket ID) |
 | `starting_points` | 1-3 file paths in priority order, pipe-separated | No tab, no newline. `\|` as list separator. Each path relative to repo root. Upper bound 3 — more suggests concept granularity is too coarse |
-| `verified_at` | Short git sha (7-40 hex chars) at which this entry was last verified against the codebase | Must match a reachable commit |
+| `verified_at` | Short git sha at which this entry was last verified against the codebase | Produced by `git rev-parse --short HEAD` (7 chars minimum, auto-extended if ambiguous). Must match a reachable commit |
 
 ### Reader contract
 
@@ -88,25 +89,30 @@ Command-side flow:
 1. Load `code-map.md` (if it exists). If not, skip the read path entirely — no hints provided.
 2. Extract keywords from the task prompt (task title tokens + prominent noun phrases from "What to implement" or ticket summary)
 3. Filter entries: concept column substring-matches any keyword (case-insensitive)
-4. For each candidate entry, verify:
+4. Deduplicate: if multiple entries share the same `concept`, keep the one with the most recent `verified_at` (by git commit recency); remove older duplicates from the file
+5. For each remaining candidate entry, verify:
    - Every path in `starting_points` exists (O(1) existence check)
-   - `git diff {verified_at}..HEAD -- {starting_points}` has no material changes (if unchanged → high confidence; if changed → lower confidence but still usable as hint)
-5. Entries where any path is missing → **remove from file immediately** (garbage collection on read)
-6. Entries where paths exist but diff shows changes → pass to agent as lower-confidence hints (agent verifies harder)
-7. Entries where paths exist and no diff → pass to agent as high-confidence hints
-
-Duplicate entries with same concept: keep the one with the most recent verified_at (by commit recency); remove older duplicates.
+   - `git diff {verified_at}..HEAD -- {starting_points}` behavior:
+     - Command succeeds, no diff → high confidence
+     - Command succeeds, has diff → lower confidence (still usable as hint)
+     - Command fails (`verified_at` unreachable — e.g., after rebase/force-push) → treat as stale, remove entry from file
+6. Entries where any path is missing → **remove from file immediately** (garbage collection on read)
+7. Entries where paths exist and diff is clean → pass to agent as high-confidence hints
+8. Entries where paths exist but diff shows changes → pass to agent as lower-confidence hints (agent verifies harder)
 
 ## Agent integration
 
-The investigate agent receives verified entries as `### Index Hints` in markdown table form (not raw TSV — formatted for LLM consumption):
+The investigate agent receives surviving entries (paths exist, git commit reachable) as `### Index Hints` in markdown table form (not raw TSV — formatted for LLM consumption):
 
 ```
-### Index Hints (verified, from code-map)
+### Index Hints (from code-map; path existence and git reachability checked)
 | Concept | Starting Points | Confidence |
 |---------|-----------------|------------|
 | dark mode toggle | ui/theme/Toggle.kt | high (no diff since verified_at) |
+| auth middleware | server/auth/Auth.kt | lower (file changed since verified_at — verify carefully) |
 ```
+
+"Confidence" reflects whether the files have changed since `verified_at`, not whether the hint is correct for the current task. High-confidence still requires the agent to verify relevance.
 
 The agent:
 - Treats hints as **candidate starting points**, not truth
@@ -121,6 +127,7 @@ The command appends the agent's Starting Points to code-map after user approval 
 Entries become stale when:
 - A listed path no longer exists → removed on next read (GC)
 - `git diff {verified_at}..HEAD -- {starting_points}` shows material change → entry is kept but flagged lower-confidence; agent's own verification determines usefulness
+- `git diff` fails because `verified_at` is unreachable (rebase/force-push history rewrite) → removed on next read (GC)
 
 No explicit invalidation pass is required. GC happens naturally on read.
 
