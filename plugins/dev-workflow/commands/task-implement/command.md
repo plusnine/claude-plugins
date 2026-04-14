@@ -35,14 +35,15 @@ If any prerequisite is incomplete → exit with message:
 
 Before invoking the agent, load Index Hints from code-map per `references/code-map-format.md`:
 
-1. If `claude-output/_index/code-map.md` exists:
+1. Resolve `{repo-name}` per `references/code-map-format.md` (`basename $(git rev-parse --show-toplevel)` lowercased; fallback `basename $(pwd)` lowercased)
+2. If `claude-output/_index/{repo-name}/code-map.md` exists:
    a. Extract keywords from the task prompt (task title tokens + prominent noun phrases from "What to implement")
    b. Filter entries by case-insensitive substring match on `concept` column
    c. For each candidate entry, verify:
       - All paths in `starting_points` exist (remove entry from file if any path missing)
       - `git diff {verified_at}..HEAD -- {starting_points}` — mark confidence as high (no diff) or lower (has diff)
    d. Pass verified entries to the agent as Index Hints (markdown table format, see `references/code-map-format.md` "Agent integration")
-2. If code-map does not exist or no hints match: skip the hints path — no change to agent invocation
+3. If code-map does not exist or no hints match: skip the hints path — no change to agent invocation
 
 Invoke `task-implement:investigate` agent. Pass:
 - The full content of the task prompt file
@@ -67,13 +68,13 @@ If 🔴 Required gaps exist:
 
 ### Step 3.5: Update code-map
 
-After Step 3 (investigation validated by the user, either directly or via gap resolution), append a new entry to `claude-output/_index/code-map.md` per `references/code-map-format.md`:
+After Step 3 (investigation validated by the user, either directly or via gap resolution), append a new entry to `claude-output/_index/{repo-name}/code-map.md` per `references/code-map-format.md` ({repo-name} resolved as in Step 2):
 
 - `concept`: task title from `tasks/{nn}-*.md` filename, normalized (kebab-case → space-separated, lowercase, trimmed)
 - `starting_points`: agent's reported Starting Points (pipe-joined, priority order preserved)
 - `verified_at`: current `git rev-parse --short HEAD`
 
-Create `claude-output/_index/` if it does not exist. Append at end of file (no merge with existing rows; dedup handled at read time).
+Create `claude-output/_index/{repo-name}/` if it does not exist. Append at end of file (no merge with existing rows; dedup handled at read time).
 
 Skip this step if the agent returned no Starting Points (unlikely, but defensive).
 

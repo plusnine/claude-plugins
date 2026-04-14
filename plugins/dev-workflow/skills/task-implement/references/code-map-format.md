@@ -10,9 +10,20 @@ It is NOT a comprehensive method-map or symbol table — it records only **narro
 
 ## Location
 
-`claude-output/_index/code-map.md` (project-scoped, gitignored with `claude-output/`).
+`claude-output/_index/{repo-name}/code-map.md` (repo-scoped within `claude-output/`, gitignored with `claude-output/`).
 
 `_index/` is a meta directory at the root of `claude-output/`, distinct from `{id}/` workflow state directories. The `_` prefix signals non-workflow scope.
+
+### `{repo-name}` resolution
+
+`claude-output/` may live at workspace level (parent of multiple repos) or inside a single repo. `{repo-name}` is resolved per-invocation so both layouts are supported:
+
+- Primary: `basename $(git rev-parse --show-toplevel)` lowercased
+- Fallback (non-git working directory): `basename $(pwd)` lowercased
+
+No further normalization — `My_Repo-2` becomes `my_repo-2`. Filesystem-safe, information-preserving.
+
+Collision note: two distinct repos with identical basename (rare) would share a code-map. Not handled in MVP.
 
 ## Format
 
@@ -66,7 +77,7 @@ Append format:
 
 Does not merge with existing entries. Same concept recorded twice creates two rows; dedup is handled at read time (most-recent verified_at wins).
 
-Create `claude-output/_index/` if it does not exist.
+Create `claude-output/_index/{repo-name}/` if it does not exist.
 
 ## Read policy
 

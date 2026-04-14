@@ -48,14 +48,15 @@ Present branch name to user → **Approval ①**.
 
 Before invoking the agent, load Index Hints from code-map per `../../skills/task-implement/references/code-map-format.md`:
 
-1. If `claude-output/_index/code-map.md` exists:
+1. Resolve `{repo-name}` per code-map-format.md (`basename $(git rev-parse --show-toplevel)` lowercased; fallback `basename $(pwd)` lowercased)
+2. If `claude-output/_index/{repo-name}/code-map.md` exists:
    a. Extract keywords from the ticket (ticket title + prominent noun phrases from symptom/expected/actual)
    b. Filter entries by case-insensitive substring match on `concept` column
    c. For each candidate entry, verify:
       - All paths in `starting_points` exist (remove entry from file if any path missing)
       - `git diff {verified_at}..HEAD -- {starting_points}` — mark confidence as high (no diff) or lower (has diff)
    d. Pass verified entries to the agent as Index Hints (markdown table format, see code-map-format.md "Agent integration")
-2. If code-map does not exist or no hints match: skip the hints path
+3. If code-map does not exist or no hints match: skip the hints path
 
 Invoke `bugfix:investigate` agent. Pass:
 - The ticket content (summary, reproduction steps, expected/actual behavior)
@@ -95,13 +96,13 @@ Update `investigation-report.md`:
 
 Present finalized report to user → **Approval ②**.
 
-After Approval ②, append a new entry to `claude-output/_index/code-map.md` per `../../skills/task-implement/references/code-map-format.md`:
+After Approval ②, append a new entry to `claude-output/_index/{repo-name}/code-map.md` per `../../skills/task-implement/references/code-map-format.md` ({repo-name} resolved as in Step 2):
 
 - `concept`: ticket title, normalized (lowercase, kebab/snake → space-separated, trimmed)
 - `starting_points`: agent's reported Starting Points from investigation-report.md (pipe-joined, priority order preserved)
 - `verified_at`: current `git rev-parse --short HEAD`
 
-Create `claude-output/_index/` if it does not exist. Skip if the agent returned no Starting Points.
+Create `claude-output/_index/{repo-name}/` if it does not exist. Skip if the agent returned no Starting Points.
 
 ### Step 3: Invoke spec-breakdown
 

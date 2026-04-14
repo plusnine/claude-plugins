@@ -99,7 +99,7 @@ Each command is resumable. On re-run with the same `{id}`, resume position is de
 
 ### Code map (navigation index)
 
-Investigations accumulate a project-scoped index of `concept → starting-point` mappings at `claude-output/_index/code-map.md`. Subsequent investigations consume verified entries to accelerate exploration. The index is a hint, not source of truth — entries are always re-verified against code before use.
+Investigations accumulate a per-repo index of `concept → starting-point` mappings at `claude-output/_index/{repo-name}/code-map.md`. This layout supports both single-repo and multi-repo workspaces (where `claude-output/` lives at workspace level). Subsequent investigations consume verified entries to accelerate exploration. The index is a hint, not source of truth — entries are always re-verified against code before use.
 
 Format and behavior: `plugins/dev-workflow/skills/task-implement/references/code-map-format.md`.
 
@@ -127,7 +127,8 @@ Skills write their output to `claude-output/` in **your project directory** (not
 ```
 claude-output/
 ├── _index/                        # project-scoped meta (not per-workflow)
-│   └── code-map.md                # concept → starting-point navigation index
+│   └── {repo-name}/               # per-repo (supports workspace- or repo-level claude-output)
+│       └── code-map.md            # concept → starting-point navigation index
 └── {id}/                          # per-workflow state
     ├── spec-review/
     │   ├── source.md              # cached spec content
