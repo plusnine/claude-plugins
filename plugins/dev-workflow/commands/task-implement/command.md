@@ -110,15 +110,17 @@ On re-run, resume position is determined by existing files:
 
 | State | Resume from |
 |-------|-------------|
-| `{nn}-done.md` exists | Already complete |
-| `{nn}-skipped.md` exists | Already complete (skipped) |
-| `{nn}-progress.md` exists & all ✅ | Step 6.6 (mark as done) |
-| `{nn}-progress.md` exists & Push ✅, PR ⏳ | Step 6.5 (create PR) |
-| `{nn}-progress.md` exists & Commit ✅, Push ⏳ | Step 6.5 (push) |
-| `{nn}-progress.md` exists & files all ✅, Commit ⏳ | Step 6.1 (verification or unified preview) |
-| `{nn}-progress.md` exists & file ⏳ remain | Step 5 (apply remaining files) |
-| `{nn}-progress.md` exists & branch ⏳ | Step 4.5 (create branch) |
+| `{nn}-done.md` or `{nn}-skipped.md` exists | Already complete |
+| `{nn}-progress.md` exists | Resume from the first ⏳ row in progress.md (branch → file changes → commit → push → create PR → mark as done) |
 | `{nn}-plan.md` exists | Step 5 (present plan for approval, write progress.md, start applying) |
 | `{nn}-spec-gaps.md` exists & Status: OPEN | Step 3 (gap resolution loop) |
-| `{nn}-spec-gaps.md` exists & Status: RESOLVED | Step 2 (re-investigate to restore Affected Files), then evaluate new gaps: 🔴 Required → update Status to OPEN, go to Step 3; 🟡/⚪ → present to user, ask proceed or resolve, on proceed go to Step 4, on resolve go to Step 3; none → go to Step 4 |
+| `{nn}-spec-gaps.md` exists & Status: RESOLVED | Step 2 (re-investigate to restore Affected Files); see "Resumption after resolved gaps" below |
 | Otherwise | Step 0 (prerequisites), then Step 2 (investigate) |
+
+### Resumption after resolved gaps
+
+When `{nn}-spec-gaps.md` exists with Status: RESOLVED, re-invoke Step 2 to restore Affected Files, then evaluate any new gaps:
+
+- 🔴 Required gaps found → set `{nn}-spec-gaps.md` Status back to OPEN, go to Step 3
+- Only 🟡 Recommended or ⚪ Optional gaps → present to user; go to Step 4 on proceed, Step 3 on resolve
+- No new gaps → go to Step 4
