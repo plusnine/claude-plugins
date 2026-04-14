@@ -61,15 +61,14 @@ Apply Sub-task Split Criteria from `task-implement/SKILL.md`:
 
 ### Step 4.5: Create branch
 
-Read `references/pr-guidelines.md` (Branch Naming section) before proceeding.
+Read `references/pr-guidelines.md` Branch Naming section for rules. This step owns only orchestration — all naming/verification rules live in that file.
 
-Verify the current branch matches the parent branch pattern `{prefix}/{id}` (e.g. `feature/PROJ-123`).
-If it does not match → exit with message:
+Verify the current branch is the parent branch per pr-guidelines.md Branch Naming. If not → exit with message:
 > Parent branch not found. Create and checkout the parent branch first (e.g. `git checkout -b feature/{id}`), then re-run this command.
 
-If this is the only task (single task per `references/pr-guidelines.md` Branch Naming): skip branch creation and use the parent branch as the head branch. Proceed to Step 5.
+If pr-guidelines.md Branch Naming resolves to "use parent branch directly" (single-task case): skip branch creation. Proceed to Step 5.
 
-Create the working branch per `references/pr-guidelines.md` Branch Naming. Inherit the prefix from the parent branch.
+Otherwise, create the working branch per pr-guidelines.md Branch Naming.
 Present branch name to user → **Approval ①**.
 If the branch already exists: confirm with user whether to reuse it.
 Carry-over of uncommitted changes is acceptable; only implementation changes are committed.
