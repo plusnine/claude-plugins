@@ -84,7 +84,7 @@ For each file change (apply in dependency order if Dependencies are specified in
 2. On approval: update `{nn}-progress.md` → ✅ Applied
 3. On rejection: revise the change based on user feedback and re-present. Repeat until the user approves (✅ Applied) or explicitly skips the file (⏭ Skipped).
 
-After all file changes are applied: notify the user and **wait for verification completion**. Do not proceed until the user confirms.
+After all file changes are applied: notify the user that changes are complete and proceed to Step 6. The user may request a pause before the Step 6.5 preview if they need time to verify.
 
 ### Step 6: Commit, push, and PR
 
@@ -101,8 +101,7 @@ If ⏭ Skipped entries exist: present them to the user before proceeding.
    On approval: execute commit → push → create/update draft PR sequentially.
    Update `{nn}-progress.md` rows (Commit → ✅, Push → ✅, Create draft PR → ✅) as each completes.
    User may request separation of push and PR creation steps.
-6. Ask the user: "Mark this task as done?" → **Approval ③**.
-   On explicit approval: rename `{nn}-progress.md` → `{nn}-done.md`.
+6. After Create draft PR completes (all rows in `{nn}-progress.md` ✅), auto-rename `{nn}-progress.md` → `{nn}-done.md`.
 
 ## Checkpoint
 
@@ -111,7 +110,8 @@ On re-run, resume position is determined by existing files:
 | State | Resume from |
 |-------|-------------|
 | `{nn}-done.md` or `{nn}-skipped.md` exists | Already complete |
-| `{nn}-progress.md` exists | Resume from the first ⏳ row in progress.md (branch → file changes → commit → push → create PR → mark as done) |
+| `{nn}-progress.md` exists & all rows ✅ | Auto-completion interrupted before rename — rename to `{nn}-done.md` |
+| `{nn}-progress.md` exists | Resume from the first ⏳ row in progress.md (branch → file changes → commit → push → create PR) |
 | `{nn}-plan.md` exists | Step 5 (present plan for approval, write progress.md, start applying) |
 | `{nn}-spec-gaps.md` exists & Status: OPEN | Step 3 (gap resolution loop) |
 | `{nn}-spec-gaps.md` exists & Status: RESOLVED | Step 2 (re-investigate to restore Affected Files); see "Resumption after resolved gaps" below |
