@@ -162,6 +162,8 @@ It is recommended to add `claude-output/` to your project's `.gitignore`:
 claude-output/
 ```
 
+See [Design Document](docs/dev-workflow/design.md) for design rationale and trade-offs.
+
 ## Requirements
 
 - Claude Code (latest version)
