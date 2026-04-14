@@ -64,8 +64,8 @@ bugfix → (spec-breakdown → task-implement)
 |---|---|---|---|
 | `/dev-workflow:spec-review {source}` | — | `{source}` (URL or file path) | `claude-output/{id}/spec-review/{source.md, review.md}` |
 | `/dev-workflow:spec-breakdown {id}` | — | `spec-review/source.md` or `bugfix/investigation-report.md` (FINAL) | `claude-output/{id}/spec-breakdown/{plan.md, tasks/*.md}` |
-| `/dev-workflow:task-implement {id} {nn}` | `task-implement:investigate` agent | `spec-breakdown/tasks/{nn}-*.md`, `spec-review/source.md` or `bugfix/investigation-report.md` | `claude-output/{id}/task-implement/{nn}-{plan,progress,spec-gaps,done,skipped}.md` + branch/commit/draft PR |
-| `/dev-workflow:bugfix {source}` | `bugfix:investigate` agent, `/dev-workflow:spec-breakdown`, `/dev-workflow:task-implement` | ticket URL | `claude-output/{id}/bugfix/{meta,investigation-report,spec-conflicts,done}.md` |
+| `/dev-workflow:task-implement {id} {nn}` | `task-implement:investigate` agent | `spec-breakdown/tasks/{nn}-*.md`, `spec-review/source.md` or `bugfix/investigation-report.md`, `_index/{repo-name}/code-map.md` (hints) | `claude-output/{id}/task-implement/{nn}-{plan,progress,spec-gaps,done,skipped}.md`, `_index/{repo-name}/code-map.md` (append) + branch/commit/draft PR |
+| `/dev-workflow:bugfix {source}` | `bugfix:investigate` agent, `/dev-workflow:spec-breakdown`, `/dev-workflow:task-implement` | ticket URL, `_index/{repo-name}/code-map.md` (hints) | `claude-output/{id}/bugfix/{meta,investigation-report,spec-conflicts,done}.md`, `_index/{repo-name}/code-map.md` (append) |
 
 ```mermaid
 flowchart LR

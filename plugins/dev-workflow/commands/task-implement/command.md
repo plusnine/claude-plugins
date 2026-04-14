@@ -150,3 +150,7 @@ When `{nn}-spec-gaps.md` exists with Status: RESOLVED, re-invoke Step 2 to resto
 - 🔴 Required gaps found → set `{nn}-spec-gaps.md` Status back to OPEN, go to Step 3
 - Only 🟡 Recommended or ⚪ Optional gaps → present to user; go to Step 4 on proceed, Step 3 on resolve
 - No new gaps → go to Step 4
+
+### Note on code-map writes (Step 3.5)
+
+Step 3.5 does not produce a persistent state file. Re-runs after resumption may append duplicate entries to `_index/{repo-name}/code-map.md`. Duplicates are harmless: dedup happens at read time (most-recent `verified_at` wins; older rows are removed on next read per `references/code-map-format.md` reader contract).

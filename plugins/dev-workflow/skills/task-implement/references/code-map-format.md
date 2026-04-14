@@ -80,6 +80,10 @@ Does not merge with existing entries. Same concept recorded twice creates two ro
 
 Create `claude-output/_index/{repo-name}/` if it does not exist.
 
+### Skip condition
+
+If the agent returned no Starting Points (empty `### Starting Points` section or "none"): skip the write entirely. An entry with no starting points provides no navigation value. This should not normally occur; if it does, the investigation itself likely failed to identify a narrow-door entry, and the command should proceed without persisting a code-map row.
+
 ## Read policy
 
 Reads occur before the investigate agent runs (task-implement Step 2 / bugfix Step 2).
@@ -143,4 +147,5 @@ Future version bumps append columns; v1 readers silently ignore extras (forward-
 - No content-hash column (git commit + path existence is sufficient)
 - No `recorded_at` date column (verified_at commit provides time reference via git history)
 - No cross-concept linking
-- No Team-shared index (individual `.claude-output/_index/` only; explicit promotion to CLAUDE.md is a human-driven operation, not a plugin feature)
+- No team-shared index (individual `.claude-output/_index/` only; explicit promotion to CLAUDE.md is a human-driven operation, not a plugin feature)
+- No concurrent-write coordination. Multiple sessions appending simultaneously may occasionally interleave bytes producing malformed rows; the reader contract silently skips malformed rows. File locking would be added in a later iteration if contention becomes problematic
