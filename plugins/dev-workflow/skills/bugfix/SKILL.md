@@ -24,7 +24,7 @@ Written to `claude-output/{ticket-id}/bugfix/`:
 
 - `meta.md` — Metadata: ticket-id, related-ticket-id, base-branch, branch-prefix. Written at branch creation.
 - `investigation-report.md` — Root cause analysis with what to fix. Status: DRAFT → FINAL. Format: `references/investigation-report-format.md`
-- `spec-conflicts.md` — Spec-vs-implementation conflicts and resolution log (only when conflicts exist). Reuses the same priority levels and Resolution Log structure defined in `task-implement/references/spec-gaps-format.md` (no separate format file; refer to that file for field definitions).
+- `spec-conflicts.md` — Spec-vs-implementation conflicts and resolution log (only when conflicts exist). Reuses the same priority levels and Resolution Log structure defined in `../../shared/references/spec-gaps-format.md` (no separate format file; refer to that file for field definitions).
 - `done.md` — Bugfix flow completed (post-processing done). Completion means the flow ran to the end; declined proposals do not block completion.
 
 Downstream output (produced by orchestrated skills):
@@ -48,7 +48,7 @@ Same as task-implement Spec Gap Priority:
 
 ## Code Map Integration
 
-Bugfix investigations consume and contribute to the same project-scoped `concept → starting-point` index used by task-implement at `claude-output/_index/code-map.md`. Format, read/write policy, and invalidation rules: `../task-implement/references/code-map-format.md`.
+Bugfix investigations consume and contribute to the same project-scoped `concept → starting-point` index used by task-implement at `claude-output/_index/code-map.md`. Format, read/write policy, and invalidation rules: `../../shared/references/code-map-format.md`.
 
 - **Before investigation** (Step 2): the command filters and verifies relevant index entries; verified entries are passed to `bugfix:investigate` agent as Index Hints
 - **After Approval ②** (Step 2c): the command appends the agent's Starting Points as a new entry

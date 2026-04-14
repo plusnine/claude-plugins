@@ -22,7 +22,7 @@ resolves spec gaps, applies implementation code, and creates a draft pull reques
 
 Written to `claude-output/{id}/task-implement/`:
 
-- `{nn}-spec-gaps.md` — Spec gaps found during investigation (only when gaps exist). Format: `references/spec-gaps-format.md`
+- `{nn}-spec-gaps.md` — Spec gaps found during investigation (only when gaps exist). Format: `../../shared/references/spec-gaps-format.md`
 - `{nn}-plan.md` — Implementation plan written after gap resolution and approved by user. Format: `references/implementation-plan-format.md`
 - `{nn}-progress.md` — Tracks branch creation, file application, commit, push, and PR creation status. Format: `references/progress-format.md`. Transient: renamed to `{nn}-done.md` or `{nn}-skipped.md`.
 - `{nn}-done.md` — Renamed from `{nn}-progress.md` after user approves completion. Presence indicates task is complete (implementation + PR created).
@@ -38,7 +38,7 @@ After implementation, the skill creates a draft PR. See `references/pr-guideline
 
 ## Code Map Integration
 
-Investigations consume and contribute to a project-scoped `concept → starting-point` index at `claude-output/_index/code-map.md`. See `references/code-map-format.md` for format, read/write policy, and invalidation rules.
+Investigations consume and contribute to a project-scoped `concept → starting-point` index at `claude-output/_index/code-map.md`. See `../../shared/references/code-map-format.md` for format, read/write policy, and invalidation rules.
 
 - **Before investigation** (Step 2): the command filters and verifies relevant index entries; verified entries are passed to the agent as Index Hints
 - **After user approval** (Step 3): the command appends the agent's Starting Points (1-3 narrow-door files) as a new entry

@@ -101,7 +101,7 @@ Each command is resumable. On re-run with the same `{id}`, resume position is de
 
 Investigations accumulate a per-repo index of `concept → starting-point` mappings at `claude-output/_index/{repo-name}/code-map.md`. This layout supports both single-repo and multi-repo workspaces (where `claude-output/` lives at workspace level). Subsequent investigations consume verified entries to accelerate exploration. The index is a hint, not source of truth — entries are always re-verified against code before use.
 
-Format and behavior: `plugins/dev-workflow/skills/task-implement/references/code-map-format.md`.
+Format and behavior: `plugins/dev-workflow/shared/references/code-map-format.md`.
 
 ### CLAUDE.md Integration
 
