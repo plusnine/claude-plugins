@@ -47,7 +47,7 @@ If the investigate agent reports `Area: unknown`:
 1. Present proposed entry points to user
 2. On approval: append to the project root `CLAUDE.md`'s "Investigation Entry Points" section (create the section if it does not exist) using this format:
    ```
-   ### {subsystem name} (e.g. "list-screen", "detail-screen", or a new name if the area is distinct)
+   ### {subsystem name} (use a name that matches your codebase's conventions; introduce a new name if the area is distinct)
    #### {area name}
    Entry files (read in this order):
    1. `{file}` — {role}

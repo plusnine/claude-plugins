@@ -15,8 +15,8 @@ Date: {YYYY-MM-DD}
 
 | # | File | Location | Change Type | Description |
 |---|------|----------|-------------|-------------|
-| 1 | `path/to/file.kt` | `ClassName.methodName` (L120-135) | modify | ... |
-| 2 | `path/to/new_file.kt` | — | create | ... |
+| 1 | `path/to/file.ext` | `ClassName.methodName` (L120-135) | modify | ... |
+| 2 | `path/to/new_file.ext` | — | create | ... |
 
 Dependencies: #2 must be completed before #1
 ```

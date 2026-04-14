@@ -26,14 +26,17 @@ Read the task prompt and investigate the codebase to determine:
    Match by comparing the task's "What to implement" and "Investigation hints" against the subsystem/area names and their descriptions in the table. Use semantic similarity — exact keyword match is not required.
 3. Read entry point files:
    - **Known area**: read the listed entry point files from CLAUDE.md
-   - **Unknown area**: read module-level structural files (e.g., `settings.gradle`, feature module `build.gradle`) to identify the affected module, then read the module's Presenter or ViewModel (fall back to Activity/Fragment if neither exists)
+   - **Unknown area**:
+     a. If the project root `CLAUDE.md` has a `Domain Profile` section, follow its `Unknown Area Protocol`
+     b. Otherwise, identify the codebase conventions by globbing for build/config markers at the repository root, then trace into the affected module using conventional entry file patterns for the detected stack
+     c. Report proposed entry points so the orchestrator can surface them to the user for approval before registration
 4. Form hypotheses about affected files and changes
 5. Verify hypotheses by reading additional files as needed
 6. Report findings
 
 ## Output (returned to command)
 
-> Role in Proposed Entry Points: brief description of the file's purpose (e.g., "primary entry for X screen", "data model for Y", "presenter handling Z flow").
+> Role in Proposed Entry Points: brief description of the file's purpose (e.g., "primary entry for {feature}", "data model for {entity}", "{component} handling {flow}").
 
 ```
 ### Area

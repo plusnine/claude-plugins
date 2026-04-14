@@ -98,7 +98,27 @@ Each command is resumable. On re-run with the same `{id}`, resume position is de
 
 ### CLAUDE.md Integration
 
-When `task-implement` or `bugfix` investigates an area not listed in the project root `CLAUDE.md`, it proposes new entries under an `Investigation Entry Points` section. Additions are written only after user approval — never silently.
+The plugin reads from and proposes additions to the project root `CLAUDE.md` in two ways:
+
+**Investigation Entry Points** — When `task-implement` or `bugfix` investigates an area not listed in `Investigation Entry Points`, it proposes new entries. Additions are written only after user approval — never silently.
+
+**Domain Profile (optional)** — For teams that want deterministic investigation behavior, the project root `CLAUDE.md` may define a `Domain Profile` section. When present, agents follow its `Unknown Area Protocol` during investigation of unknown areas. When absent, agents fall back to general codebase conventions (build/config marker detection + conventional entry files), and propose identified entry points to the user for approval.
+
+Format for `Domain Profile`:
+
+````markdown
+## Domain Profile
+
+### Unknown Area Protocol
+
+1. Read {build-structure file patterns} to identify the affected module
+2. Within the identified module, read {entry file patterns in priority order}
+
+### Conventions
+
+- File extensions: {extensions}
+- Architecture entry points: {component patterns}
+````
 
 ### Language
 
