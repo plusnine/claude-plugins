@@ -10,6 +10,7 @@ The plugin provides commands for spec-driven development and bug-fix workflows, 
 - persists state to `claude-output/{id}/` files so interrupted sessions can be resumed
 - blocks forward progress when 🔴 Required spec gaps or spec conflicts remain unresolved
 - delegates code investigation to **read-only agents** separated from code-modifying orchestration
+- accumulates a per-repo **navigation index** (`concept → starting points`) during investigation, verified against code on every use
 
 The plugin's core does not encode domain-specific conventions (build systems, architecture patterns, file extensions). Projects can supply these via the root `CLAUDE.md` (see [CLAUDE.md Integration](#claudemd-integration)); absent that, agents fall back to general codebase heuristics and propose findings for user approval.
 
@@ -64,8 +65,8 @@ bugfix → (spec-breakdown → task-implement)
 |---|---|---|---|
 | `/dev-workflow:spec-review {source}` | — | `{source}` (URL or file path) | `claude-output/{id}/spec-review/{source.md, review.md}` |
 | `/dev-workflow:spec-breakdown {id}` | — | `spec-review/source.md` or `bugfix/investigation-report.md` (FINAL) | `claude-output/{id}/spec-breakdown/{plan.md, tasks/*.md}` |
-| `/dev-workflow:task-implement {id} {nn}` | `task-implement:investigate` agent | `spec-breakdown/tasks/{nn}-*.md`, `spec-review/source.md` or `bugfix/investigation-report.md` | `claude-output/{id}/task-implement/{nn}-{plan,progress,spec-gaps,done,skipped}.md` + branch/commit/draft PR |
-| `/dev-workflow:bugfix {source}` | `bugfix:investigate` agent, `/dev-workflow:spec-breakdown`, `/dev-workflow:task-implement` | ticket URL | `claude-output/{id}/bugfix/{meta,investigation-report,spec-conflicts,done}.md` |
+| `/dev-workflow:task-implement {id} {nn}` | `task-implement:investigate` agent | `spec-breakdown/tasks/{nn}-*.md`, `spec-review/source.md` or `bugfix/investigation-report.md`, `_index/{repo-name}/code-map.md` (hints) | `claude-output/{id}/task-implement/{nn}-{plan,progress,spec-gaps,done,skipped}.md`, `_index/{repo-name}/code-map.md` (append) + branch/commit/draft PR |
+| `/dev-workflow:bugfix {source}` | `bugfix:investigate` agent, `/dev-workflow:spec-breakdown`, `/dev-workflow:task-implement` | ticket URL, `_index/{repo-name}/code-map.md` (hints) | `claude-output/{id}/bugfix/{meta,investigation-report,spec-conflicts,done}.md`, `_index/{repo-name}/code-map.md` (append) |
 
 ```mermaid
 flowchart LR
@@ -97,6 +98,14 @@ Agents (`task-implement:investigate`, `bugfix:investigate`) are read-only: they 
 
 Each command is resumable. On re-run with the same `{id}`, resume position is derived from the files present in `claude-output/{id}/`. See the Checkpoint section in each command file for exact resume rules.
 
+### Code map (navigation index)
+
+Investigations accumulate a per-repo index of `concept → starting-point` mappings at `claude-output/_index/{repo-name}/code-map.md`. This layout supports both single-repo and multi-repo workspaces (where `claude-output/` lives at workspace level). Subsequent investigations consume verified entries to accelerate exploration. The index is a hint, not source of truth — entries are always re-verified against code before use.
+
+Operations are logged to `claude-output/_index/{repo-name}/code-map-metrics.log` (append-only, never loaded into agent context) for out-of-band analysis via grep/awk.
+
+Format and behavior: `plugins/dev-workflow/shared/references/code-map-format.md`.
+
 ### CLAUDE.md Integration
 
 The investigate agents read the project root `CLAUDE.md` for codebase context. The plugin does not modify `CLAUDE.md` or require any specific section structure.
@@ -116,29 +125,36 @@ What this plugin does not do:
 
 ## Output
 
-Skills write their output to `claude-output/{id}/` in **your project directory** (not in this plugin).
+Skills write their output to `claude-output/` in **your project directory** (not in this plugin).
 
 ```
-claude-output/{id}/
-├── spec-review/
-│   ├── source.md          # cached spec content
-│   └── review.md          # review result
-├── spec-breakdown/
-│   ├── plan.md            # coarse task list
-│   └── tasks/
-│       ├── 01-*.md        # task prompt files
-│       └── 02-*.md
-├── task-implement/
-│   ├── {nn}-plan.md
-│   ├── {nn}-progress.md
-│   ├── {nn}-spec-gaps.md
-│   └── {nn}-done.md       # or {nn}-skipped.md
-└── bugfix/
-    ├── meta.md
-    ├── investigation-report.md
-    ├── spec-conflicts.md
-    └── done.md
+claude-output/
+├── _index/                        # project-scoped meta (not per-workflow)
+│   └── {repo-name}/               # per-repo (supports workspace- or repo-level claude-output)
+│       ├── code-map.md            # concept → starting-point navigation index
+│       └── code-map-metrics.log   # append-only metrics (out-of-band analysis, not loaded to agent)
+└── {id}/                          # per-workflow state
+    ├── spec-review/
+    │   ├── source.md              # cached spec content
+    │   └── review.md              # review result
+    ├── spec-breakdown/
+    │   ├── plan.md                # coarse task list
+    │   └── tasks/
+    │       ├── 01-*.md            # task prompt files
+    │       └── 02-*.md
+    ├── task-implement/
+    │   ├── {nn}-plan.md
+    │   ├── {nn}-progress.md
+    │   ├── {nn}-spec-gaps.md
+    │   └── {nn}-done.md           # or {nn}-skipped.md
+    └── bugfix/
+        ├── meta.md
+        ├── investigation-report.md
+        ├── spec-conflicts.md
+        └── done.md
 ```
+
+Naming convention: `_*/` = project-scoped meta directories; `{id}/` = per-workflow state.
 
 It is recommended to add `claude-output/` to your project's `.gitignore`:
 
@@ -149,3 +165,4 @@ claude-output/
 ## Requirements
 
 - Claude Code (latest version)
+- Git (the plugin manages branches, commits, and uses git commits as the code-map verification oracle)

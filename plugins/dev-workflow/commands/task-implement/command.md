@@ -36,9 +36,28 @@ If any prerequisite is incomplete → exit with message:
 
 ### Step 2: Investigate
 
+Before invoking the agent, load Index Hints from code-map per `../../shared/references/code-map-format.md`:
+
+1. Resolve `{repo-name}` per `../../shared/references/code-map-format.md` (`basename $(git rev-parse --show-toplevel)` lowercased). If not in a git repo: skip the hints path entirely
+2. If `claude-output/_index/{repo-name}/code-map.md` exists:
+   a. Extract keywords from the task prompt (task title tokens + prominent noun phrases from "What to implement"). Expand with semantic equivalents — synonyms, related terms, alternative namings the codebase may use (query expansion). Leverage CLAUDE.md for domain vocabulary
+   b. Filter entries by case-insensitive substring match on `concept` column against any keyword (base or expanded)
+   c. Deduplicate: for each duplicated concept, keep the entry with the most recent `verified_at` (by git commit recency). Tiebreaker for same verified_at: keep the last-written (bottom-most) row. Remove older duplicates from the file
+   d. For each remaining candidate entry, verify:
+      - All paths in `starting_points` exist (remove entry from file if any path missing)
+      - `git diff {verified_at}..HEAD -- {starting_points}`: success + no diff → high confidence; success + diff → lower confidence; command failure (verified_at unreachable) → remove entry from file
+   e. Pass verified entries to the agent as Index Hints (markdown table format, see `../../shared/references/code-map-format.md` "Agent integration")
+3. If code-map does not exist or no hints survived: skip the hints path — no change to agent invocation
+
+Surface to user a one-line summary after the read phase: `Index: N hints used (M high, K lower), S stale removed`. If no hints used, `Index: no matches`.
+
+Append a metrics line to `claude-output/_index/{repo-name}/code-map-metrics.log` per `../../shared/references/code-map-format.md` Metrics Log section:
+`{ISO8601-UTC}<TAB>read<TAB>matched:{N},verified:{M},removed:{S},passed:{K}`
+
 Invoke `task-implement:investigate` agent. Pass:
 - The full content of the task prompt file
 - The path to the project root `CLAUDE.md` (agent will read it directly for codebase context)
+- Index Hints (if any)
 
 If the Affected Files list is empty: present the findings to the user and propose skipping this task.
 On confirmation: write `{nn}-skipped.md` with reason and exit.
@@ -55,6 +74,23 @@ If 🔴 Required gaps exist:
 4. If the user's resolution requires verifying new code areas: re-invoke `task-implement:investigate` agent, passing the updated spec gaps content alongside the original task prompt
 5. Repeat until no 🔴 Required gaps remain
 6. Update `{nn}-spec-gaps.md` Status to RESOLVED.
+
+### Step 3.5: Update code-map
+
+After Step 3 (investigation validated by the user, either directly or via gap resolution), append a new entry to `claude-output/_index/{repo-name}/code-map.md` per `../../shared/references/code-map-format.md`. Resolve `{repo-name}` fresh per `../../shared/references/code-map-format.md` (`basename $(git rev-parse --show-toplevel)` lowercased; skip this entire step if not in a git repo):
+
+- `concept`: strip the `{nn}-` prefix from `tasks/{nn}-{task-name}.md` filename, then normalize (kebab-case → space-separated, lowercase, trimmed). Example: `01-add-dark-mode.md` → `"add dark mode"`
+- `starting_points`: agent's reported Starting Points (pipe-joined, priority order preserved)
+- `verified_at`: current `git rev-parse --short HEAD`
+
+Create `claude-output/_index/{repo-name}/` if it does not exist. Append at end of file (no merge with existing rows; dedup handled at read time).
+
+Skip this step if the agent returned no Starting Points (unlikely, but defensive).
+
+Surface to user after append: `Index: appended '{concept}' → {starting_points} @ {verified_at}`. If skipped, state why (e.g., `Index: skipped — not a git repo` / `Index: skipped — no starting points`).
+
+Append a metrics line to `claude-output/_index/{repo-name}/code-map-metrics.log`:
+`{ISO8601-UTC}<TAB>write<TAB>appended:{1 if appended, 0 if skipped}`
 
 ### Step 4: Evaluate task size
 
@@ -128,3 +164,11 @@ When `{nn}-spec-gaps.md` exists with Status: RESOLVED, re-invoke Step 2 to resto
 - 🔴 Required gaps found → set `{nn}-spec-gaps.md` Status back to OPEN, go to Step 3
 - Only 🟡 Recommended or ⚪ Optional gaps → present to user; go to Step 4 on proceed, Step 3 on resolve
 - No new gaps → go to Step 4
+
+### Note on code-map reads and writes
+
+Code-map operations happen within command steps (read at Step 2, write at Step 3.5) and do not produce their own persistent state files. On resumption:
+
+- Step 2 re-reads the code-map fresh — fresh dedup, fresh GC of stale entries, fresh verification. Idempotent per reader contract
+- Step 3.5 may re-append the same entry — duplicates are harmless: dedup at read time picks the most-recent `verified_at` and removes older rows per `../../shared/references/code-map-format.md` reader contract
+- If any code-map append fails (e.g., filesystem error), re-run simply retries the append; no separate recovery needed
