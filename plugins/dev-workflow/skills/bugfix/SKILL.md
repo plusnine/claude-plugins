@@ -45,3 +45,11 @@ Same as task-implement Spec Gap Priority:
 | 🔴 Required | Must be resolved before implementation | Blocks implementation |
 | 🟡 Recommended | Recommended to resolve, may proceed | Does not block |
 | ⚪ Optional | Optional | Does not block |
+
+## Code Map Integration
+
+Bugfix investigations consume and contribute to the same project-scoped `concept → starting-point` index used by task-implement at `claude-output/_index/code-map.md`. Format, read/write policy, and invalidation rules: `../task-implement/references/code-map-format.md`.
+
+- **Before investigation** (Step 2): the command filters and verifies relevant index entries; verified entries are passed to `bugfix:investigate` agent as Index Hints
+- **After Approval ②** (Step 2c): the command appends the agent's Starting Points as a new entry
+- The index is a navigation accelerator, never source of truth — entries are always verified against code before use

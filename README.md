@@ -97,6 +97,12 @@ Agents (`task-implement:investigate`, `bugfix:investigate`) are read-only: they 
 
 Each command is resumable. On re-run with the same `{id}`, resume position is derived from the files present in `claude-output/{id}/`. See the Checkpoint section in each command file for exact resume rules.
 
+### Code map (navigation index)
+
+Investigations accumulate a project-scoped index of `concept → starting-point` mappings at `claude-output/_index/code-map.md`. Subsequent investigations consume verified entries to accelerate exploration. The index is a hint, not source of truth — entries are always re-verified against code before use.
+
+Format and behavior: `plugins/dev-workflow/skills/task-implement/references/code-map-format.md`.
+
 ### CLAUDE.md Integration
 
 The investigate agents read the project root `CLAUDE.md` for codebase context. The plugin does not modify `CLAUDE.md` or require any specific section structure.
@@ -116,29 +122,34 @@ What this plugin does not do:
 
 ## Output
 
-Skills write their output to `claude-output/{id}/` in **your project directory** (not in this plugin).
+Skills write their output to `claude-output/` in **your project directory** (not in this plugin).
 
 ```
-claude-output/{id}/
-├── spec-review/
-│   ├── source.md          # cached spec content
-│   └── review.md          # review result
-├── spec-breakdown/
-│   ├── plan.md            # coarse task list
-│   └── tasks/
-│       ├── 01-*.md        # task prompt files
-│       └── 02-*.md
-├── task-implement/
-│   ├── {nn}-plan.md
-│   ├── {nn}-progress.md
-│   ├── {nn}-spec-gaps.md
-│   └── {nn}-done.md       # or {nn}-skipped.md
-└── bugfix/
-    ├── meta.md
-    ├── investigation-report.md
-    ├── spec-conflicts.md
-    └── done.md
+claude-output/
+├── _index/                        # project-scoped meta (not per-workflow)
+│   └── code-map.md                # concept → starting-point navigation index
+└── {id}/                          # per-workflow state
+    ├── spec-review/
+    │   ├── source.md              # cached spec content
+    │   └── review.md              # review result
+    ├── spec-breakdown/
+    │   ├── plan.md                # coarse task list
+    │   └── tasks/
+    │       ├── 01-*.md            # task prompt files
+    │       └── 02-*.md
+    ├── task-implement/
+    │   ├── {nn}-plan.md
+    │   ├── {nn}-progress.md
+    │   ├── {nn}-spec-gaps.md
+    │   └── {nn}-done.md           # or {nn}-skipped.md
+    └── bugfix/
+        ├── meta.md
+        ├── investigation-report.md
+        ├── spec-conflicts.md
+        └── done.md
 ```
+
+Naming convention: `_*/` = project-scoped meta directories; `{id}/` = per-workflow state.
 
 It is recommended to add `claude-output/` to your project's `.gitignore`:
 

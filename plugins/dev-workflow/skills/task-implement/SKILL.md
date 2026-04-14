@@ -36,6 +36,14 @@ After implementation, the skill creates a draft PR. See `references/pr-guideline
 - PR content (template, title format, screenshot rules)
 - Sensitive content handling
 
+## Code Map Integration
+
+Investigations consume and contribute to a project-scoped `concept → starting-point` index at `claude-output/_index/code-map.md`. See `references/code-map-format.md` for format, read/write policy, and invalidation rules.
+
+- **Before investigation** (Step 2): the command filters and verifies relevant index entries; verified entries are passed to the agent as Index Hints
+- **After user approval** (Step 3): the command appends the agent's Starting Points (1-3 narrow-door files) as a new entry
+- The index is a navigation accelerator, never source of truth — entries are always verified against code before use
+
 ## Completion States
 
 - `{nn}-done.md` — implementation complete + PR created
