@@ -10,6 +10,7 @@ The plugin provides commands for spec-driven development and bug-fix workflows, 
 - persists state to `claude-output/{id}/` files so interrupted sessions can be resumed
 - blocks forward progress when 🔴 Required spec gaps or spec conflicts remain unresolved
 - delegates code investigation to **read-only agents** separated from code-modifying orchestration
+- accumulates a per-repo **navigation index** (`concept → starting points`) during investigation, verified against code on every use
 
 The plugin's core does not encode domain-specific conventions (build systems, architecture patterns, file extensions). Projects can supply these via the root `CLAUDE.md` (see [CLAUDE.md Integration](#claudemd-integration)); absent that, agents fall back to general codebase heuristics and propose findings for user approval.
 
@@ -101,6 +102,8 @@ Each command is resumable. On re-run with the same `{id}`, resume position is de
 
 Investigations accumulate a per-repo index of `concept → starting-point` mappings at `claude-output/_index/{repo-name}/code-map.md`. This layout supports both single-repo and multi-repo workspaces (where `claude-output/` lives at workspace level). Subsequent investigations consume verified entries to accelerate exploration. The index is a hint, not source of truth — entries are always re-verified against code before use.
 
+Operations are logged to `claude-output/_index/{repo-name}/code-map-metrics.log` (append-only, never loaded into agent context) for out-of-band analysis via grep/awk.
+
 Format and behavior: `plugins/dev-workflow/shared/references/code-map-format.md`.
 
 ### CLAUDE.md Integration
@@ -128,7 +131,8 @@ Skills write their output to `claude-output/` in **your project directory** (not
 claude-output/
 ├── _index/                        # project-scoped meta (not per-workflow)
 │   └── {repo-name}/               # per-repo (supports workspace- or repo-level claude-output)
-│       └── code-map.md            # concept → starting-point navigation index
+│       ├── code-map.md            # concept → starting-point navigation index
+│       └── code-map-metrics.log   # append-only metrics (out-of-band analysis, not loaded to agent)
 └── {id}/                          # per-workflow state
     ├── spec-review/
     │   ├── source.md              # cached spec content
@@ -161,3 +165,4 @@ claude-output/
 ## Requirements
 
 - Claude Code (latest version)
+- Git (the plugin manages branches, commits, and uses git commits as the code-map verification oracle)
