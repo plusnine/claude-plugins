@@ -37,8 +37,8 @@ Before invoking the agent, load Index Hints from code-map per `../../shared/refe
 
 1. Resolve `{repo-name}` per `../../shared/references/code-map-format.md` (`basename $(git rev-parse --show-toplevel)` lowercased). If not in a git repo: skip the hints path entirely
 2. If `claude-output/_index/{repo-name}/code-map.md` exists:
-   a. Extract keywords from the task prompt (task title tokens + prominent noun phrases from "What to implement")
-   b. Filter entries by case-insensitive substring match on `concept` column
+   a. Extract keywords from the task prompt (task title tokens + prominent noun phrases from "What to implement"). Expand with semantic equivalents — synonyms, related terms, alternative namings the codebase may use (query expansion). Leverage CLAUDE.md for domain vocabulary
+   b. Filter entries by case-insensitive substring match on `concept` column against any keyword (base or expanded)
    c. Deduplicate: for each duplicated concept, keep the entry with the most recent `verified_at` (by git commit recency). Tiebreaker for same verified_at: keep the last-written (bottom-most) row. Remove older duplicates from the file
    d. For each remaining candidate entry, verify:
       - All paths in `starting_points` exist (remove entry from file if any path missing)

@@ -91,8 +91,8 @@ Reads occur before the investigate agent runs (task-implement Step 2 / bugfix St
 Command-side flow:
 
 1. Load `code-map.md` (if it exists). If not, skip the read path entirely — no hints provided.
-2. Extract keywords from the task prompt (task title tokens + prominent noun phrases from "What to implement" or ticket summary)
-3. Filter entries: concept column substring-matches any keyword (case-insensitive)
+2. Extract keywords from the task prompt (task title tokens + prominent noun phrases from "What to implement" or ticket summary). Expand with semantic equivalents — common synonyms, related terms, or alternative namings likely used in the codebase for the same concept (query expansion, classical IR technique; Rocchio 1971). Use CLAUDE.md for domain vocabulary. Example: `"add dark mode persistence"` → `{dark mode, theme, night mode, appearance, persistence, settings, preferences}`
+3. Filter entries: concept column substring-matches any keyword — base or expanded (case-insensitive)
 4. Deduplicate: if multiple entries share the same `concept`, keep the one with the most recent `verified_at` (by git commit recency). Tiebreaker for same concept + same verified_at: keep the last-written (bottom-most) row. Remove other duplicates from the file
 5. For each remaining candidate entry, verify:
    - Every path in `starting_points` exists (O(1) existence check)
