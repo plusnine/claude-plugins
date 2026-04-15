@@ -42,6 +42,25 @@ Determines the base (merge target) branch for a task's PR:
 - PR title: `[{id}] {change summary}` — no commit prefix, no task count
 - Ticket URL and specification URL: extract from `claude-output/{id}/spec-review/source.md` or `claude-output/{id}/bugfix/meta.md`
 
+### Content Restrictions
+
+Applies to PR body, commit messages, and PR/code review comments.
+
+- **No AI-workflow / internal tooling references**: must not disclose the AI-assisted workflow structure used to produce the change. Forbidden elements:
+  - File paths under `claude-output/` or any other workflow-managed working directory
+  - Names of skills, agents, commands, or plugins (e.g. `dev-workflow`, `spec-breakdown`, `bugfix:investigate`, `task-implement`)
+  - Filenames of workflow artifacts (e.g. `investigation-report.md`, `plan.md`, `progress.md`, `spec-gaps.md`, `meta.md`)
+  - Internal task / phase numbering originating from the workflow (e.g. "Task 01", "sub-task A", "Phase 2", "Approval ②")
+  - Workflow-specific section titles when used verbatim as headings (e.g. "Affected Files", "Starting Points")
+  - **Allowed**: `Co-Authored-By: Claude ...` commit trailer (explicit attribution, expected). Also allowed: common engineering vocabulary that happens to be used in the workflow but is standard industry terminology (e.g. "root cause", "impact", "regression", "affected modules" as prose).
+  - If investigation context is useful for reviewers, inline the findings as prose — do not link to workflow artifacts.
+
+- **No negative-scope disclaimers**: do not list what the PR did *not* do. Do not write a Notes / 備考 section whose only content is "related ticket X is handled separately" or "Y is intentionally left unchanged". If it is not in the diff, the diff already says so. Omit the section entirely.
+  - Exception: if the PR *preserves* something in a non-obvious way (e.g. intentionally keeping a behavior that looks like a bug), that is worth stating.
+
+- **Inapplicable sections**: when a template section does not apply, keep the heading and write an explicit not-applicable marker in the body (e.g. `なし` / `None`). Do not leave the body blank, and do not write `N/A`.
+  - Rationale: blank bodies can be read as "forgot to fill in"; `N/A` is a locale-mismatched artifact in non-English templates. An explicit marker signals "checked, not applicable".
+
 ### Screenshot Rules
 
 Determine screenshot needs based on the nature of changes:
