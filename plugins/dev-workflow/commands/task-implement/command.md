@@ -132,16 +132,16 @@ If ⏭ Skipped entries exist: present them to the user before proceeding.
 
 1. Analyze actual `git diff` and propose commit grouping per `references/pr-guidelines.md` Commit Guidelines.
 2. Resolve base branch per `references/pr-guidelines.md` Base Branch Resolution.
-3. Check for existing PR via `gh pr list --head {branch}`.
-4. Check repository visibility via `gh repo view --json isPrivate`.
+3. Check for existing PR/MR on the same head branch using the platform's hosting CLI or REST API (e.g. `gh pr list --head {branch}` for GitHub, `glab mr list --source-branch {branch}` for GitLab, Bitbucket REST API for Bitbucket).
+4. Check repository visibility using the platform's hosting CLI or REST API (e.g. `gh repo view --json isPrivate` for GitHub, `glab repo view` for GitLab, Bitbucket REST API for Bitbucket).
 5. Present unified preview per `references/pr-guidelines.md` Unified Preview Format → **Approval ②**.
    User may request modifications to commit messages, file grouping, PR title/body via numbered instructions.
-   On approval: execute commit → push → create/update draft PR sequentially.
-   Update `{nn}-progress.md` rows (Commit → ✅, Push → ✅, Create draft PR → ✅) as each completes.
-   User may request separation of push and PR creation steps.
-6. After Create draft PR completes (all rows in `{nn}-progress.md` ✅), auto-rename `{nn}-progress.md` → `{nn}-done.md`.
+   On approval: execute commit → push → create/update draft PR/MR sequentially.
+   Update `{nn}-progress.md` rows (Commit → ✅, Push → ✅, Create draft PR/MR → ✅) as each completes.
+   User may request separation of push and PR/MR creation steps.
+6. After Create draft PR/MR completes (all rows in `{nn}-progress.md` ✅), auto-rename `{nn}-progress.md` → `{nn}-done.md`.
 
-On failure of any sub-step (commit / push / `gh pr create`): keep that row as ⏳, append a brief error note (command + error message) to `{nn}-progress.md`, surface the error to the user, and exit. Re-run resumes at that ⏳ row per the Checkpoint table.
+On failure of any sub-step (commit / push / PR-MR create): keep that row as ⏳, append a brief error note (command + error message) to `{nn}-progress.md`, surface the error to the user, and exit. Re-run resumes at that ⏳ row per the Checkpoint table.
 
 ## Checkpoint
 
@@ -151,7 +151,7 @@ On re-run, resume position is determined by existing files:
 |-------|-------------|
 | `{nn}-done.md` or `{nn}-skipped.md` exists | Already complete |
 | `{nn}-progress.md` exists & all rows ✅ | Auto-completion interrupted before rename — rename to `{nn}-done.md` |
-| `{nn}-progress.md` exists | Resume from the first ⏳ row in progress.md (branch → file changes → commit → push → create PR) |
+| `{nn}-progress.md` exists | Resume from the first ⏳ row in progress.md (branch → file changes → commit → push → create PR/MR) |
 | `{nn}-plan.md` exists | Step 5 (present plan for approval, write progress.md, start applying) |
 | `{nn}-spec-gaps.md` exists & Status: OPEN | Step 3 (gap resolution loop) |
 | `{nn}-spec-gaps.md` exists & Status: RESOLVED | Step 2 (re-investigate to restore Affected Files); see "Resumption after resolved gaps" below |
