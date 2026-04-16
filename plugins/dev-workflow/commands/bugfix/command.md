@@ -46,23 +46,11 @@ Present branch name to user → **Approval ①**.
 
 ### Step 2: Investigate
 
-Before invoking the agent, load Index Hints from code-map per `../../shared/references/code-map-format.md`:
+Before invoking the agent, load Index Hints from code-map per `../../shared/references/code-map-format.md` (sections: `{repo-name}` resolution, Read policy, Agent integration). Skip if not in a git repo.
 
-1. Resolve `{repo-name}` per `../../shared/references/code-map-format.md` (`basename $(git rev-parse --show-toplevel)` lowercased). If not in a git repo: skip the hints path entirely
-2. If `claude-output/_index/{repo-name}/code-map.md` exists:
-   a. Extract keywords from the ticket (ticket title + prominent noun phrases from symptom/expected/actual). Expand with semantic equivalents — synonyms, related terms, alternative namings the codebase may use (query expansion). Leverage CLAUDE.md for domain vocabulary
-   b. Filter entries by case-insensitive substring match on `concept` column against any keyword (base or expanded)
-   c. Deduplicate: for each duplicated concept, keep the entry with the most recent `verified_at` (by git commit recency). Tiebreaker for same verified_at: keep the last-written (bottom-most) row. Remove older duplicates from the file
-   d. For each remaining candidate entry, verify:
-      - All paths in `starting_points` exist (remove entry from file if any path missing)
-      - `git diff {verified_at}..HEAD -- {starting_points}`: success + no diff → high confidence; success + diff → lower confidence; command failure (verified_at unreachable) → remove entry from file
-   e. Pass verified entries to the agent as Index Hints (markdown table format, see `../../shared/references/code-map-format.md` "Agent integration")
-3. If code-map does not exist or no hints survived: skip the hints path
+Surface to user after the read phase: `Index: N hints used (M high, K lower), S stale removed`. If no hints used, `Index: no matches`.
 
-Surface to user a one-line summary after the read phase: `Index: N hints used (M high, K lower), S stale removed`. If no hints used, `Index: no matches`.
-
-Append a metrics line to `claude-output/_index/{repo-name}/code-map-metrics.log` per `../../shared/references/code-map-format.md` Metrics Log section:
-`{ISO8601-UTC}<TAB>read<TAB>matched:{N},verified:{M},removed:{S},passed:{K}`
+Append a metrics line per `code-map-format.md` Metrics Log section (read trigger).
 
 Invoke `bugfix:investigate` agent. Pass:
 - The ticket content (summary, reproduction steps, expected/actual behavior)
@@ -102,18 +90,11 @@ Update `investigation-report.md`:
 
 Present finalized report to user → **Approval ②**.
 
-After Approval ②, append a new entry to `claude-output/_index/{repo-name}/code-map.md` per `../../shared/references/code-map-format.md`. Resolve `{repo-name}` fresh per `../../shared/references/code-map-format.md` (`basename $(git rev-parse --show-toplevel)` lowercased; skip this entire step if not in a git repo):
-
-- `concept`: ticket summary/title (e.g., Jira "summary" field, Linear "title" field — the human-readable description, not the ticket ID), normalized (lowercase, kebab/snake → space-separated, trimmed, drop trailing period if any). Example: Jira "BUG-123: Password reset link broken" → `"password reset link broken"`
-- `starting_points`: agent's reported Starting Points from investigation-report.md (pipe-joined, priority order preserved)
-- `verified_at`: current `git rev-parse --short HEAD`
-
-Create `claude-output/_index/{repo-name}/` if it does not exist. Skip if the agent returned no Starting Points.
+After Approval ②, append a new entry per `../../shared/references/code-map-format.md` Write policy. Concept derivation: bugfix flow — see Column specification in `code-map-format.md`. Skip if not in a git repo or agent returned no Starting Points.
 
 Surface to user after append: `Index: appended '{concept}' → {starting_points} @ {verified_at}`. If skipped, state why (e.g., `Index: skipped — not a git repo` / `Index: skipped — no starting points`).
 
-Append a metrics line to `claude-output/_index/{repo-name}/code-map-metrics.log`:
-`{ISO8601-UTC}<TAB>write<TAB>appended:{1 if appended, 0 if skipped}`
+Append a metrics line per `code-map-format.md` Metrics Log section (write trigger).
 
 ### Step 3: Invoke spec-breakdown
 
