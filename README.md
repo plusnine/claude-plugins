@@ -38,7 +38,7 @@ A set of commands for structured spec-driven development.
 |-------|-------------|
 | `/dev-workflow:spec-review` | Review specifications for completeness before implementation |
 | `/dev-workflow:spec-breakdown` | Decompose spec-review artifacts into coarse tasks |
-| `/dev-workflow:task-implement` | Investigate codebase, resolve spec gaps, implement a single task, and create a draft PR |
+| `/dev-workflow:task-implement` | Investigate codebase, resolve spec gaps, implement a single task, and create a draft PR/MR |
 | `/dev-workflow:bugfix` | Investigate a bug from a BTS/ITS ticket, resolve spec conflicts, and orchestrate the full fix flow |
 
 #### Workflow
@@ -54,7 +54,7 @@ bugfix → (spec-breakdown → task-implement)
 **Feature development:**
 1. `/dev-workflow:spec-review {source}` — Review the spec and surface gaps
 2. `/dev-workflow:spec-breakdown {id}` — Decompose into coarse tasks
-3. `/dev-workflow:task-implement {id} {nn}` — Implement a task and create a draft PR
+3. `/dev-workflow:task-implement {id} {nn}` — Implement a task and create a draft PR/MR
 
 **Bug fix:**
 1. `/dev-workflow:bugfix {source}` — Investigate root cause, resolve conflicts, and orchestrate spec-breakdown and task-implement for the full fix flow (each step requires user approval)
@@ -65,7 +65,7 @@ bugfix → (spec-breakdown → task-implement)
 |---|---|---|---|
 | `/dev-workflow:spec-review {source}` | — | `{source}` (URL or file path) | `claude-output/{id}/spec-review/{source.md, review.md}` |
 | `/dev-workflow:spec-breakdown {id}` | — | `spec-review/source.md` or `bugfix/investigation-report.md` (FINAL) | `claude-output/{id}/spec-breakdown/{plan.md, tasks/*.md}` |
-| `/dev-workflow:task-implement {id} {nn}` | `task-implement:investigate` agent | `spec-breakdown/tasks/{nn}-*.md`, `spec-review/source.md` or `bugfix/investigation-report.md`, `_index/{repo-name}/code-map.md` (hints) | `claude-output/{id}/task-implement/{nn}-{plan,progress,spec-gaps,done,skipped}.md`, `_index/{repo-name}/code-map.md` (append) + branch/commit/draft PR |
+| `/dev-workflow:task-implement {id} {nn}` | `task-implement:investigate` agent | `spec-breakdown/tasks/{nn}-*.md`, `spec-review/source.md` or `bugfix/investigation-report.md`, `_index/{repo-name}/code-map.md` (hints) | `claude-output/{id}/task-implement/{nn}-{plan,progress,spec-gaps,done,skipped}.md`, `_index/{repo-name}/code-map.md` (append) + branch/commit/draft PR/MR |
 | `/dev-workflow:bugfix {source}` | `bugfix:investigate` agent, `/dev-workflow:spec-breakdown`, `/dev-workflow:task-implement` | ticket URL, `_index/{repo-name}/code-map.md` (hints) | `claude-output/{id}/bugfix/{meta,investigation-report,spec-conflicts,done}.md`, `_index/{repo-name}/code-map.md` (append) |
 
 ```mermaid
@@ -118,7 +118,7 @@ File output is always written in English. User-facing messages (previews, prompt
 
 What this plugin does not do:
 
-- Auto-merge PRs — all PRs are created as Draft
+- Auto-merge PRs/MRs — all are created as Draft
 - Proceed past unresolved 🔴 Required spec gaps or spec conflicts
 - Decide scope (task splits, file edits, branch creation, commits) without user approval
 - Modify the project root `CLAUDE.md`
@@ -168,3 +168,4 @@ See [Design Document](docs/dev-workflow/design.md) for design rationale and trad
 
 - Claude Code (latest version)
 - Git (the plugin manages branches, commits, and uses git commits as the code-map verification oracle)
+- A repository hosting platform's CLI or REST API access for PR/MR operations (e.g. `gh` for GitHub, `glab` for GitLab, Bitbucket REST API)

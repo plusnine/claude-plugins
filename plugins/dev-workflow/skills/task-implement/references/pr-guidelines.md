@@ -34,10 +34,15 @@ Determines the base (merge target) branch for a task's PR:
 - Target ~100 lines per commit; strongly recommend splitting at >200 lines
 - Grouping is based on actual `git diff` at commit time, not the implementation plan
 
-## PR Content
+## PR/MR Content
 
-- Always created as Draft PR
-- Use the repository's PR template if present (search `.github/pull_request_template.md`)
+> Terminology: "PR" (Pull Request) and "MR" (Merge Request) refer to the same concept. GitHub and Bitbucket use "PR"; GitLab uses "MR". This document uses "PR/MR" where platform-neutral phrasing is needed, and "PR" where the sentence already covers both.
+
+- Always created as Draft PR/MR
+- Use the repository's PR/MR template if present. Search per platform's official spec:
+  - **GitHub**: a single template at `pull_request_template.md` / `PULL_REQUEST_TEMPLATE.md` (case-insensitive) in the repo root, `docs/`, or `.github/`; or multiple templates as `*.md` under a `PULL_REQUEST_TEMPLATE/` subdirectory in any of those three locations
+  - **GitLab**: `.gitlab/merge_request_templates/*.md` on the default branch
+  - **Bitbucket Cloud**: no file-based spec — the default description is stored in repository settings (Pull requests → Default description) and is not retrievable from the repo tree. Skip file search and fall back to the default template
 - If no template exists, use `pr-default-template.md` (translate section headers per `language` in `~/.claude/settings.json`; fallback: English)
 - PR title: `[{id}] {change summary}` — no commit prefix, no task count
 - Ticket URL and specification URL: extract from `claude-output/{id}/spec-review/source.md` or `claude-output/{id}/bugfix/meta.md`
@@ -73,12 +78,12 @@ Determine screenshot needs based on the nature of changes:
 Dark mode support is determined by checking the repository for dark mode resources or theme configuration.
 See `pr-default-template.md` for markup examples.
 
-### Existing PR Handling
+### Existing PR/MR Handling
 
-Before creating a new PR, check for existing PRs on the same head branch via `gh pr list --head {branch}`:
+Before creating a new PR/MR, check for existing ones on the same head branch using the platform's hosting CLI or REST API (e.g. `gh pr list --head {branch}` for GitHub, `glab mr list --source-branch {branch}` for GitLab, Bitbucket REST API for Bitbucket):
 
-- **Exists**: preview diff between current PR body and proposed content → confirm update via `gh pr edit`
-- **Does not exist**: create new PR
+- **Exists**: preview diff between current PR/MR body and proposed content → confirm update via the platform's edit command (e.g. `gh pr edit`, `glab mr update`, or Bitbucket REST API)
+- **Does not exist**: create new PR/MR
 - User may request adjustments via prompt before final approval
 
 ## Unified Preview Format
@@ -95,7 +100,7 @@ Present commits and PR content together for approval:
 [2] type: subject
     - file3
 
-🟢 PR (new) / 🟡 PR (update)
+🟢 PR/MR (new) / 🟡 PR/MR (update)
 ━━━━━━━━━━━━━━━━━━━━━━
 Base: {prefix}/{id} (existing) / {prefix}/{id} (new, from {base-branch})
 Title: [{id}] change summary
@@ -109,6 +114,6 @@ Body:
 
 ## Sensitive Content
 
-Before PR creation, check repository visibility via `gh repo view --json isPrivate`:
+Before PR/MR creation, check repository visibility using the platform's hosting CLI or REST API (e.g. `gh repo view --json isPrivate` for GitHub, `glab repo view` for GitLab, Bitbucket REST API for Bitbucket):
 - Private repo → internal URLs (JIRA, Confluence, etc.) are exempt from sensitive content warnings
 - Public repo → display sensitive content warning at preview and require explicit approval
