@@ -42,8 +42,8 @@ Same as `task-implement` Spec Gap Priority (see `skills/task-implement/SKILL.md`
 
 ## Code Map Integration
 
-Bugfix investigations consume and contribute to the same project-scoped `concept → starting-point` index used by task-implement at `claude-output/_index/code-map.md`. Format, read/write policy, and invalidation rules: `../../shared/references/code-map-format.md`.
+Bugfix investigations consume and contribute to the same project-scoped `concept → starting-point` index used by task-implement at `claude-output/_index/{repo-name}/code-map.jsonl`. Format, read/write policy, and invalidation rules: `../../shared/references/code-map-format.md`.
 
 - **Before investigation** (Step 2): the command filters and verifies relevant index entries; verified entries are passed to `bugfix:investigate` agent as Index Hints
-- **After Approval ②** (Step 2c): the command appends the agent's Starting Points as a new entry
+- **After Approval ②** (Step 2c): the command extracts the `## Code Map Entry` section from `investigation-report.md`, validates via the multi-layer Write pipeline, and appends the JSONL line
 - The index is a navigation accelerator, never source of truth — entries are always verified against code before use

@@ -90,11 +90,19 @@ Update `investigation-report.md`:
 
 Present finalized report to user → **Approval ②**.
 
-After Approval ②, append a new entry per `../../shared/references/code-map-format.md` Write policy. Concept derivation: bugfix flow — see Column specification in `code-map-format.md`. Skip if not in a git repo or agent returned no Starting Points.
+After Approval ②, run the Write pipeline per `../../shared/references/code-map-format.md` Write policy. Skip entirely if not in a git repo.
 
-Surface to user after append: `Index: appended '{concept}' → {starting_points} @ {verified_at}`. If skipped, state why (e.g., `Index: skipped — not a git repo` / `Index: skipped — no starting points`).
+1. **v1 legacy detection** (first v2 write only): if `claude-output/_index/{repo-name}/code-map.md` exists, present a rename plan to the user via the Write Safety Gate per `code-map-format.md` "v1 → v2 migration": `code-map.md` → `code-map.v1.deprecated.md` (timestamped suffix on collision). Proceed with the rename on approval; if rejected, continue with the v2 write leaving the v1 file untouched.
+2. **Extract, validate, and append** per `code-map-format.md` Write pipeline (six layers: extraction, line structure, JSON syntax, schema, semantic, verified_at injection). The source is the `### Code Map Entry` block at the end of the investigate agent's reply (also embedded as `## Code Map Entry` in `investigation-report.md` by this command for the report's heading hierarchy). On layer 1-5 failure, retry exactly once per Retry protocol. On second failure, surface the rejection reason and skip the append (downstream steps continue).
+3. **Skip (no block)**: if the agent's reply contains no `### Code Map Entry` heading, treat as graceful skip — surface `Index: skipped — no entry block` and continue.
 
-Append a metrics line per `code-map-format.md` Metrics Log section (write trigger).
+Surface outcomes:
+- Appended: `Index: appended '{concept}' → {N entries} @ {verified_at}`
+- Skipped (no git repo): `Index: skipped — not a git repo`
+- Skipped (no block): `Index: skipped — no entry block`
+- Rejected (validation failed after retry): `Index: write rejected — {final reason}`
+
+Append a metrics line per `code-map-format.md` Metrics Log section (write trigger) reflecting the outcome.
 
 ### Step 3: Invoke spec-breakdown
 

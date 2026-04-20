@@ -38,10 +38,10 @@ After implementation, the skill creates a draft PR. See `references/pr-guideline
 
 ## Code Map Integration
 
-Investigations consume and contribute to a project-scoped `concept → starting-point` index at `claude-output/_index/code-map.md`. See `../../shared/references/code-map-format.md` for format, read/write policy, and invalidation rules.
+Investigations consume and contribute to a project-scoped `concept → starting-point` index at `claude-output/_index/{repo-name}/code-map.jsonl`. See `../../shared/references/code-map-format.md` for format, read/write policy, and invalidation rules.
 
 - **Before investigation** (Step 2): the command filters and verifies relevant index entries; verified entries are passed to the agent as Index Hints
-- **After user approval** (Step 3): the command appends the agent's Starting Points (1-3 narrow-door files) as a new entry
+- **After user approval** (Step 3): the command extracts the agent's `### Code Map Entry` block (1-5 narrow-door entries), validates via the multi-layer Write pipeline, and appends the JSONL line
 - The index is a navigation accelerator, never source of truth — entries are always verified against code before use
 
 ## Completion States
