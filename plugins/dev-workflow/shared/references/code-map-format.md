@@ -202,7 +202,7 @@ If any check fails, rewrite before emitting.
 ### Positive examples
 
 ```code-map
-{"concept":"dark mode toggle","aliases":["night mode","theme toggle"],"tags":["ui","theme"],"entries":[{"path":"ui/theme/Toggle.kt","symbol":"ThemeToggle","kind":"class","anchor":"L12-L80","summary":"user-facing switch delegates persistence to ThemeStore."}],"verified_at":null}
+{"concept":"dark mode toggle","aliases":["night mode","theme toggle"],"tags":["ui","theme"],"entries":[{"path":"ui/theme/Toggle.kt","symbol":"ThemeToggle","kind":"class","anchor":"L12-L80","summary":"user-facing switch; delegates persistence to ThemeStore."}],"verified_at":null}
 ```
 
 ```code-map
