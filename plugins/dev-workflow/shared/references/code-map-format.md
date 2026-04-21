@@ -36,7 +36,7 @@ Collision note: two distinct repos with identical basename (rare) would share a 
 
 - **No header, no comments, no blank lines.** Every non-empty line MUST be a valid JSON object conforming to the schema below. Lines that fail to parse are errors, not silently skipped.
 - **File terminator**: the file MUST end with a single LF (`\n`). CRLF is not allowed.
-- **Line length**: each record MUST be ≤ 4096 bytes (POSIX `PIPE_BUF`, ensures atomic `O_APPEND` write).
+- **Line length**: each record MUST be ≤ 4096 bytes. Under Linux (ext4/XFS) and macOS (APFS), single-record appends at this size are empirically atomic via `O_APPEND`. POSIX formally guarantees atomicity only for pipe/FIFO writes of `PIPE_BUF` or less — regular-file atomicity is implementation-dependent. This limit is therefore a pragmatic ceiling for multi-session write safety, not a spec-level guarantee; truly concurrent writers are out of scope (see "Scope limits (MVP)").
 - **Ordering**: records are append-only in write order; dedup and GC happen at read time.
 
 ### Canonical example (2 records)
@@ -381,9 +381,10 @@ The plugin writes but never reads this file. Log grows unbounded — users may t
 - Single file per project (no module split until size becomes an issue — revisit at 1000+ entries)
 - No cross-concept linking
 - No team-shared index (individual `.claude-output/_index/` only; explicit promotion to CLAUDE.md is a human-driven operation, not a plugin feature)
-- No concurrent-write coordination. Single-record writes ≤ 4096 bytes are atomic under POSIX `O_APPEND`. Truly concurrent multi-session writes are out of scope; if one ever produces a malformed line, the reader's malformed-line handling surfaces it.
+- No concurrent-write coordination. Single-record appends ≤ 4096 bytes are empirically atomic on Linux (ext4/XFS) and macOS (APFS) via `O_APPEND`, but this is implementation-dependent rather than a POSIX guarantee (see "Format" section). Truly concurrent multi-session writes are out of scope; if one ever produces a malformed line, the reader's malformed-line handling surfaces it.
 - No external JSON Schema validator integration. The command performs schema conformance via LLM-based evaluation of the Draft 2020-12 rules embedded in this document. This is a pragmatic trade-off — the self-check checklist, strict prompt examples, and retry-once-on-failure pipeline mitigate unreliability; external validator integration may be revisited if failure rates become problematic.
 - No human-readable serialization. The file is AI-optimized JSONL; the plugin never renders it back to human form.
+- **MVP parameter choices are empirical.** The following caps are not derived from cited research and are subject to revision based on operational signals (validation-failure rate, hit rate, prompt-drift events observed in the metrics log): `entries` 1-5, `summary` ≤ 179 chars + period, `aliases` ≤ 10 items (each ≤ 80 chars), `tags` ≤ 8 items (each ≤ 24 chars), `concept` ≤ 80 chars. Revisit once usage data accumulates.
 
 ## Versioning
 
