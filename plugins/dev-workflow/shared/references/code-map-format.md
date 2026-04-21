@@ -281,6 +281,8 @@ The agent may choose to skip in the following cases:
 
 Skipping is a graceful non-append; it is not an error.
 
+**Task-level skip bypass (distinct from the above)**: if the surrounding task is skipped at a stage prior to the code-map write step (e.g., task-implement Step 2 proposes skipping when the investigate agent returns an empty Affected Files list, resulting in `{nn}-skipped.md`), Step 3.5 / Step 2c is never reached. In this case neither a code-map append nor a metrics entry occurs — code-map is simply not touched for this task. This is different from the Code Map Entry-level skip described above (where the agent runs, Step 3.5 / 2c runs, but the agent chose to omit the block).
+
 ## Read policy
 
 Reads occur before the investigate agent runs (task-implement Step 2 / bugfix Step 2). Readers operate only on `code-map.jsonl`; the legacy `code-map.md` (v1) is silently ignored here — detection and rename run on first v2 write (see "v1 → v2 migration").
