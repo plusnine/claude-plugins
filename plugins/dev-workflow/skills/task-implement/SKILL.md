@@ -1,6 +1,6 @@
 ---
 name: task-implement
-description: Investigate codebase, resolve spec gaps, and implement a single coarse task from spec-breakdown output.
+description: Investigate codebase, resolve spec gaps, and implement a single coarse task from spec-breakdown output. Use when implementing a task file under `claude-output/{id}/spec-breakdown/tasks/{nn}-*.md`.
 version: 0.2.0
 model: sonnet
 ---
@@ -64,3 +64,10 @@ After gap resolution, evaluate whether the task scope fits one atomic implementa
 | 🔴 Required | Must be resolved before implementation | Blocks implementation |
 | 🟡 Recommended | Recommended to resolve, may proceed | Does not block |
 | ⚪ Optional | Optional | Does not block |
+
+## Gotchas
+
+- Code-map operations are git-repo-gated. When `git rev-parse --show-toplevel` fails, skip all read/write steps silently — do not error out.
+- If the agent returns an empty Affected Files list, propose skipping the task (`{nn}-skipped.md`) — do not invent file changes to proceed.
+- When `claude-output/{id}/bugfix/investigation-report.md` Status is `DRAFT` (or missing), the command refuses to start. Finalize via `/dev-workflow:bugfix` Step 2c first.
+- Only 🔴 Required gaps block Step 4+. 🟡 Recommended and ⚪ Optional gaps are written with Status `RESOLVED` and flow continues.

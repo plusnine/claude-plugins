@@ -34,3 +34,9 @@ The review scope is strictly limited to the spec document itself.
 - No gaps, overlaps, or ambiguities
 - Boundary conditions and edge cases considered
 - Out-of-scope items explicitly stated to prevent implicit expectations
+
+## Gotchas
+
+- Before flagging information as missing, scan the full document — requirements are often stated in a different section than expected.
+- Only the primary spec page is authoritative. Do not follow linked pages to find an ID or resolve ambiguity (e.g. JIRA IDs must appear in the spec body, not on linked pages).
+- Items already marked `✅ Resolved` in a prior Resolution Log must not reappear in new Open Items — carry them over verbatim instead of re-flagging.

@@ -31,3 +31,18 @@ A task is appropriately scoped if it can be described in a single sentence witho
 ### Content rules
 - Do NOT reference specific files or class names — those are determined by task-implement
 - Exception: if a file/class is explicitly named in the spec, it may be referenced
+
+## Example
+
+Spec excerpt: *"When the user taps Save, validate the form, persist the entry, and update the list view."*
+
+- ❌ Single task — violates the no-"and" rule: "Validate form, persist entry, and refresh list."
+- ✅ Three tasks — one sentence each: (1) "Validate the save form on tap." (2) "Persist the validated entry." (3) "Refresh the list view after a successful save."
+
+Note: actors cooperating in a single flow (user tap → form → repo → list) do NOT count as a split signal; the split here comes from three distinct operations.
+
+## Gotchas
+
+- When source-type is `spec-review` and `review.md` Verdict is `FAIL`, do not proceed — stop and prompt the user to resolve 🔴 Required items first.
+- `bugfix` flow skips the `review.md` check entirely — do not look for it under `claude-output/{id}/spec-review/`.
+- File and class names belong to task-implement's investigation phase, not here. The only exception is when the spec body itself names them.
