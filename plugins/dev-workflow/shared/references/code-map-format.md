@@ -216,7 +216,7 @@ If any check fails, rewrite before emitting.
 3. **Multi-line JSON** — `\n` inside the fence (pretty-printed JSON is rejected).
 4. **verified_at not null** — agent output with `"verified_at":"a1b2c3d"` is rejected.
 5. **Missing period in summary** — `"summary":"does a thing"` is rejected.
-6. **Key omitted** — writing `"kind"` and `"anchor"` only when non-null; all optional keys must be present with `null`.
+6. **Key omission when value would be null** — e.g., emitting `"kind"` or `"anchor"` only for non-null values is wrong. All optional keys MUST always appear, with value `null` when not applicable.
 7. **Trailing comma or single quotes** — `{'concept':'x',}` is rejected.
 8. **Non-ASCII in concept/aliases/tags** — `"concept":"ダークモード"` is rejected; express in ASCII or translate.
 
@@ -250,17 +250,22 @@ On success, append the line to `code-map.jsonl` (creating the file and the `_ind
 
 ### Retry protocol
 
-On failure at any of layers 1-5, the command MUST retry exactly once by re-invoking the agent with the following additional prompt appended to its original input (literal text, do not paraphrase):
+On failure at any of layers 1-5, the command MUST retry exactly once by re-invoking the agent with the following additional prompt appended to its original input. Substitute the `{...}` placeholders with actual values; all other text is passed verbatim.
 
 ```
 ## Previous output was rejected
 
-Layer: {1|2|3|4|5}
-Reason: {exact error message from the validator}
-Offending substring: {literal excerpt, max 200 chars, first occurrence}
+Layer: {layer_number}
+Reason: {error_message}
+Offending substring: {excerpt}
 
 Produce a corrected `### Code Map Entry` block. All other requirements from the original prompt still apply.
 ```
+
+Placeholder substitution:
+- `{layer_number}`: the failing layer (integer, 1-5)
+- `{error_message}`: the exact error message from the validator
+- `{excerpt}`: literal offending substring, max 200 chars, first occurrence
 
 If the second attempt also fails, the command MUST NOT append anything. Surface the final failure reason to the user, record `appended:0,reason:validation-failed` in the metrics log, and proceed with the remainder of the command step (downstream steps are not blocked by code-map append failure).
 
@@ -276,25 +281,24 @@ Skipping is a graceful non-append; it is not an error.
 
 ## Read policy
 
-Reads occur before the investigate agent runs (task-implement Step 2 / bugfix Step 2).
+Reads occur before the investigate agent runs (task-implement Step 2 / bugfix Step 2). Readers operate only on `code-map.jsonl`; the legacy `code-map.md` (v1) is silently ignored here — detection and rename run on first v2 write (see "v1 → v2 migration").
 
 Command-side flow:
 
 1. Resolve `{repo-name}`. If `git rev-parse --show-toplevel` fails: skip the entire read path (no hints).
 2. Load `code-map.jsonl`. If not present: skip (no hints).
-3. **Legacy v1 detection**: if `code-map.md` exists in the same directory, schedule a rename approval (see "v1 → v2 migration" below). This detection happens on first v2 write, not on every read — readers silently ignore `code-map.md`.
-4. Parse each line as JSON. Parse-error lines are malformed and **surfaced to the user** (`Index: N malformed lines skipped — investigate code-map.jsonl`); they are not silently ignored but do not block the read.
-5. Schema-validate each record. Records failing validation are also surfaced and skipped (readers are forgiving; writers are strict).
-6. Extract keywords from the task prompt or ticket (task title + prominent noun phrases).
-7. Match: case-insensitive substring match of any keyword against `concept`, any element of `aliases`, or any element of `tags`.
-8. Deduplicate: for records sharing the same `concept`, keep the one with the most recent `verified_at` (by git commit recency). Tiebreaker: keep the last-written (bottom-most) record. Remove older duplicates from the file as garbage collection.
-9. For each surviving record, verify:
+3. Parse each line as JSON. Parse-error lines are malformed and **surfaced to the user** (`Index: N malformed lines skipped — investigate code-map.jsonl`); they are not silently ignored but do not block the read.
+4. Schema-validate each record. Records failing validation are also surfaced and skipped (readers are forgiving; writers are strict).
+5. Extract keywords from the task prompt or ticket (task title + prominent noun phrases).
+6. Match: case-insensitive substring match of any keyword against `concept`, any element of `aliases`, or any element of `tags`.
+7. Deduplicate: for records sharing the same `concept`, keep the one with the most recent `verified_at` (by git commit recency). Tiebreaker: keep the last-written (bottom-most) record. Remove older duplicates from the file as garbage collection.
+8. For each surviving record, verify:
    - Every `entries[].path` exists on disk (else remove the record from the file immediately as GC)
    - `git diff {verified_at}..HEAD -- {all paths in the record}`:
      - success + no diff → high confidence
      - success + diff → lower confidence (still usable)
      - failure (`verified_at` unreachable, e.g., after force-push) → treat as stale, remove record from file
-10. Forward surviving records to the agent as Index Hints (see next section).
+9. Forward surviving records to the agent as Index Hints (see next section).
 
 ### Forward compatibility (Postel's law)
 
