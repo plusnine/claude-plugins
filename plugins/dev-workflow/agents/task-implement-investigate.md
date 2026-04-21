@@ -97,6 +97,10 @@ Walk through mentally before writing the fence:
 
 If any check fails, rewrite before emitting.
 
+### Aliases generation hint
+
+When producing `aliases`, consult the project's CLAUDE.md for domain vocabulary. Prefer terms already used in the codebase (e.g., CLAUDE.md-mentioned module names, glossary entries) over general-purpose synonyms. This pre-expansion at write time replaces read-time LLM query expansion; the quality of `aliases` directly affects future hit rate.
+
 ### Skip condition
 
 If no valid entry can be produced (all candidate starting points are untracked, or the investigation concluded no useful narrow-door exists), **omit the `### Code Map Entry` section entirely**. The command treats this as a graceful skip.

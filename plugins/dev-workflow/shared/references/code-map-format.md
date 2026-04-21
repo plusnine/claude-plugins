@@ -230,6 +230,8 @@ Write triggers:
 
 The writing orchestrator is the command, not the agent. The agent emits a `### Code Map Entry` block; the command validates, injects `verified_at`, and appends.
 
+**Multiple invocations within a single command step**: if the agent is invoked more than once within a single command step (e.g., task-implement Step 3 gap-resolution loop re-invokes the investigate agent to validate new code areas), only the `### Code Map Entry` from the **final** invocation is appended. Earlier invocations' Code Map Entries are discarded.
+
 ### Write pipeline (multi-layer validation)
 
 Every write goes through six layers. Failure at any layer triggers retry (see below).
@@ -241,8 +243,8 @@ Every write goes through six layers. Failure at any layer triggers retry (see be
 5. **Semantic validation**:
    - `concept` does not appear in `aliases`
    - within `entries`, `(path, symbol)` tuple is unique across entries
-   - for each `entries[].path`: `git ls-files -- {path}` returns a non-empty result (tracked by git)
-   - for each `entries[].anchor` (when non-null): parse `L{start}(-L{end})?` and verify `start ≥ 1 ∧ end ≥ start ∧ end ≤ (wc -l {path})`
+   - for each `entries[].path`: `git ls-files -- {path}` returns a non-empty result (tracked by git). The path MUST be passed as a separate argument (after `--`), never interpolated into a shell command string, to prevent injection and to handle spaces / special characters safely.
+   - for each `entries[].anchor` (when non-null): parse `L{start}(-L{end})?` and verify `start ≥ 1 ∧ end ≥ start ∧ end ≤ (wc -l -- {path})`. Same path-argument discipline as above.
    - every `entries[].summary` is distinct from every other entry's summary within the same record
 6. **Verified-at injection**: replace `"verified_at":null` with `"verified_at":"{git rev-parse --short HEAD}"`.
 
@@ -250,7 +252,7 @@ On success, append the line to `code-map.jsonl` (creating the file and the `_ind
 
 ### Retry protocol
 
-On failure at any of layers 1-5, the command MUST retry exactly once by re-invoking the agent with the following additional prompt appended to its original input. Substitute the `{...}` placeholders with actual values; all other text is passed verbatim.
+On failure at any of layers 1-5, the command MUST retry exactly once by re-invoking the agent with the following additional prompt appended to its original input. **"Original input"** means the prompt and context originally passed to the investigate agent in the current command step — i.e., the invocation that produced the rejected output (Step 2 for the first invocation; the most recent gap-resolution re-invocation in loop cases). The retry prompt is appended verbatim after that original input. Substitute the `{...}` placeholders with actual values; all other text is passed verbatim.
 
 ```
 ## Previous output was rejected
@@ -313,11 +315,13 @@ The investigate agent receives surviving records as a markdown table (not raw JS
 ```markdown
 ### Index Hints (code-map v2; path existence and git reachability checked)
 
-| Concept | Tags | Entry | Summary | Confidence |
+| Concept (aliases) | Tags | Entry | Summary | Confidence |
 |---|---|---|---|---|
-| dark mode toggle | ui, theme | `ui/theme/Toggle.kt:ThemeToggle` @ L12-L80 (class) | user-facing switch delegates persistence to ThemeStore. | high |
-| dark mode toggle | ui, theme | `ui/theme/ThemeStore.kt:ThemeStore.setMode` (function) | applies theme change; writes to SettingsRepo. | high |
+| dark mode toggle (night mode, theme toggle) | ui, theme | `ui/theme/Toggle.kt:ThemeToggle` @ L12-L80 (class) | user-facing switch delegates persistence to ThemeStore. | high |
+| dark mode toggle (night mode, theme toggle) | ui, theme | `ui/theme/ThemeStore.kt:ThemeStore.setMode` (function) | applies theme change; writes to SettingsRepo. | high |
 ```
+
+When `aliases` is empty, the parenthetical is omitted (e.g., `| auth middleware | ...`). Multiple entries from the same record repeat the Concept/Tags cells across rows (record-level fields are duplicated per entry for readable row-level lookup).
 
 "Confidence" reflects whether the files have changed since `verified_at`, not whether the hint is correct for the current task. High-confidence still requires the agent to verify relevance.
 
@@ -353,7 +357,7 @@ A side-effect append-only log at `claude-output/_index/{repo-name}/code-map-metr
 ```
 # code-map-metrics v2
 # cols: timestamp<TAB>op<TAB>counts
-# op: read | write | gc
+# op: read | write
 # timestamp: ISO 8601 UTC
 # counts: comma-separated key:value pairs (no spaces)
 2026-04-15T10:30:00Z	read	matched:5,verified:3,removed:0,passed:3,malformed:0
@@ -365,10 +369,10 @@ A side-effect append-only log at `claude-output/_index/{repo-name}/code-map-metr
 
 ### Write triggers
 
-- **`read`** (after command-side read flow completes): `matched:{N},verified:{M},removed:{S},passed:{K},malformed:{X}` where N = keyword hits, M = passed verify, S = stale removals, K = records forwarded to agent, X = malformed/schema-invalid lines surfaced to user.
+- **`read`** (after command-side read flow completes): `matched:{N},verified:{M},removed:{S},passed:{K},malformed:{X}` where N = keyword hits, M = passed verify, S = stale removals, K = records forwarded to agent, X = malformed/schema-invalid lines surfaced to user. GC operations (path-missing / verified_at-unreachable removals) are recorded within the `read` op via the `removed` counter; there is no separate `gc` op in MVP.
 - **`write`** (after write pipeline completes, whether or not the append happened):
   - success: `appended:1`
-  - skipped (no block / no starting points / not a git repo): `appended:0,reason:no-block` or `appended:0,reason:no-git-repo`
+  - skipped: `appended:0,reason:no-block` (agent omitted the Code Map Entry section) or `appended:0,reason:no-git-repo` (skip-all precondition)
   - validation failed after retry: `appended:0,reason:validation-failed`
 
 ### Analysis (user-driven, out-of-band)
