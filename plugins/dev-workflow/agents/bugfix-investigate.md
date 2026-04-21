@@ -84,12 +84,9 @@ Strict rules (summary — the canonical source is `code-map-format.md`):
 7. **Starting points MUST be existing, git-tracked files.**
 8. **Entries priority order**: index 0 = highest priority (most useful read-first file for a future investigator).
 
-### Concept derivation (bugfix flow)
+### Concept derivation
 
-- Source: the ticket summary/title text (human-readable description, not the ticket ID)
-- Normalize: lowercase, replace hyphens/underscores with spaces, trim, drop trailing period
-- Non-ASCII characters: translate to ASCII equivalents (e.g., `"パスワードリセット壊れる"` → `"password reset broken"`)
-- Example: `"BUG-123: Password reset link broken."` → `"password reset link broken"`
+Rules: see `../shared/references/code-map-format.md` "Concept derivation" (bugfix flow section).
 
 ### Self-check before emitting
 

@@ -151,6 +151,23 @@ Key omission is not allowed — optional values MUST be present as `null` (never
 | `entries[].summary` | ✅ | One sentence, ≤ 179 chars + period. No newlines. Lets agents decide hit/miss before reading. |
 | `verified_at` | ✅ (string or null) | Git short SHA (7-40 hex chars) at which the record was verified. Agent output uses `null`; command substitutes the actual SHA at write time. |
 
+### Concept derivation
+
+The agent computes `concept` from the current command flow's source artifact. Rules are flow-specific:
+
+**task-implement flow**
+- Source: the task prompt filename `claude-output/{id}/spec-breakdown/tasks/{nn}-{task-name}.md`
+- Strip the `{nn}-` prefix, replace hyphens with spaces, lowercase, trim
+- Example: `01-add-dark-mode.md` → `"add dark mode"`
+
+**bugfix flow**
+- Source: the ticket summary/title text (human-readable description, not the ticket ID)
+- Normalize: lowercase, replace hyphens/underscores with spaces, trim, drop trailing period if present
+- Translate non-ASCII to ASCII equivalents (e.g., `パスワードリセット壊れる` → `password reset broken`)
+- Example: `"BUG-123: Password reset link broken."` → `"password reset link broken"`
+
+The normalized `concept` MUST pass the schema pattern `^[a-z0-9]+( [a-z0-9]+)*$` with `maxLength:80`. If the normalization produces a string that violates the pattern (e.g., reserved characters remain), the agent is responsible for further cleanup before emitting.
+
 ### Tag conventions (guidance, not enforced by schema)
 
 Tags serve two axes simultaneously:

@@ -76,11 +76,9 @@ Strict rules (summary — the canonical source is `code-map-format.md`):
 7. **Starting points MUST be existing, git-tracked files.**
 8. **Entries priority order**: index 0 = highest priority (most useful read-first file for a future investigator).
 
-### Concept derivation (task flow)
+### Concept derivation
 
-- Source: the task prompt filename `tasks/{nn}-{task-name}.md`
-- Strip the `{nn}-` prefix, replace hyphens with spaces, lowercase, trim
-- Example: `01-add-dark-mode.md` → `"add dark mode"`
+Rules: see `../shared/references/code-map-format.md` "Concept derivation" (task-implement flow section).
 
 ### Self-check before emitting
 
