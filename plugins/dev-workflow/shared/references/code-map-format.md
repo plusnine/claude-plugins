@@ -379,11 +379,11 @@ A side-effect append-only log at `claude-output/_index/{repo-name}/code-map-metr
 # op: read | write
 # timestamp: ISO 8601 UTC
 # counts: comma-separated key:value pairs (no spaces)
-2026-04-15T10:30:00Z	read	matched:5,verified:3,removed:0,passed:3,malformed:0
-2026-04-15T10:31:12Z	write	appended:1
-2026-04-15T11:00:00Z	read	matched:8,verified:7,removed:1,passed:7,malformed:0
-2026-04-17T09:15:00Z	write	appended:0,reason:validation-failed
-2026-04-17T09:15:30Z	write	appended:0,reason:no-block
+2026-04-15T10:30:00Z	read	matched:5,verified:3,removed:0,passed:3,malformed:0,ref:PROJ-123,task:02
+2026-04-15T10:31:12Z	write	appended:1,ref:PROJ-123,task:02
+2026-04-15T11:00:00Z	read	matched:8,verified:7,removed:1,passed:7,malformed:0,ref:BUG-456
+2026-04-17T09:15:00Z	write	appended:0,reason:validation-failed,ref:BUG-456
+2026-04-17T09:15:30Z	write	appended:0,reason:no-block,ref:PROJ-789,task:03
 ```
 
 ### Write triggers
@@ -394,12 +394,18 @@ A side-effect append-only log at `claude-output/_index/{repo-name}/code-map-metr
   - skipped: `appended:0,reason:no-block` (agent omitted the Code Map Entry section) or `appended:0,reason:no-git-repo` (skip-all precondition)
   - validation failed after retry: `appended:0,reason:validation-failed`
 
+**Context fields (appended to both `read` and `write` entries)**:
+- `ref:{id}` — the `{id}` identifier of the current workflow (the `{id}` in `claude-output/{id}/`). Covers spec-review feature ids, bugfix ticket ids, or user-chosen identifiers uniformly. Always present when the command has a resolved `{id}`.
+- `task:{nn}` — the task number within the spec-breakdown decomposition. Present only when the operation originates from a task-implement invocation (task-implement Step 2 read / Step 3.5 write). Omitted for bugfix Step 2 / Step 2c operations which are investigation-level, not task-level.
+
 ### Analysis (user-driven, out-of-band)
 
 - Hit rate proxy: `passed / matched` over time
 - Staleness rate: cumulative `removed` per unit time
 - Validation failure rate: count of `reason:validation-failed` over time (signals prompt drift or schema mismatch)
 - Warm-up curve: `passed` per read over time
+- Per-workflow breakdown: group by `ref` to compare hit rate / failure rate across features or bug tickets
+- Task-level drill-down: within a `ref`, group by `task` to identify tasks with persistent validation failures
 
 The plugin writes but never reads this file. Log grows unbounded — users may truncate periodically if size becomes a concern.
 
