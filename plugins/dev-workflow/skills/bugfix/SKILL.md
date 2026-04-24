@@ -1,6 +1,6 @@
 ---
 name: bugfix
-description: Investigate codebase for root cause analysis of a bug, resolve spec-vs-implementation conflicts, and hand off to spec-breakdown and task-implement for fix implementation.
+description: Investigate codebase for root cause analysis of a bug, resolve spec-vs-implementation conflicts, and hand off to spec-breakdown and task-implement for fix implementation. Use when starting from a BTS/ITS bug ticket URL.
 version: 0.1.0
 model: sonnet
 ---
@@ -47,3 +47,10 @@ Bugfix investigations consume and contribute to the same project-scoped `concept
 - **Before investigation** (Step 2): the command filters and verifies relevant index entries; verified entries are passed to `bugfix:investigate` agent as Index Hints
 - **After Approval ②** (Step 2c): the command extracts the `## Code Map Entry` section from `investigation-report.md`, validates via the multi-layer Write pipeline, and appends the JSONL line
 - The index is a navigation accelerator, never source of truth — entries are always verified against code before use
+
+## Gotchas
+
+- Code-map operations are git-repo-gated. When `git rev-parse --show-toplevel` fails, skip all read/write steps silently.
+- When the user does not provide a related-ticket-id, or the related ticket has no `spec-review/source.md`, proceed **without** a spec reference — do not block.
+- 🔴 Required conflicts block transitioning `investigation-report.md` to Status `FINAL`. 🟡/⚪ conflicts do not.
+- `done.md` records flow completion even if some task proposals were declined by the user during task-implement — decline does not block completion.
