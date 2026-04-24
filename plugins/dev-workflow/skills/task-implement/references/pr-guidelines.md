@@ -56,7 +56,7 @@ Applies to PR body, commit messages, and PR/code review comments.
   - Names of skills, agents, commands, or plugins (e.g. `dev-workflow`, `spec-breakdown`, `bugfix:investigate`, `task-implement`)
   - Filenames of workflow artifacts (e.g. `investigation-report.md`, `plan.md`, `progress.md`, `spec-gaps.md`, `meta.md`)
   - Internal task / phase numbering originating from the workflow (e.g. "Task 01", "sub-task A", "Phase 2", "Approval ②")
-  - Workflow-specific section titles when used verbatim as headings (e.g. "Affected Files", "Starting Points")
+  - Workflow-specific section titles when used verbatim as headings (e.g. "Affected Files", "Starting Points", "Code Map Entry")
   - **Allowed**: `Co-Authored-By: Claude ...` commit trailer (explicit attribution, expected). Also allowed: common engineering vocabulary that happens to be used in the workflow but is standard industry terminology (e.g. "root cause", "impact", "regression", "affected modules" as prose).
   - If investigation context is useful for reviewers, inline the findings as prose — do not link to workflow artifacts.
 

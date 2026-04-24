@@ -10,7 +10,7 @@ model: sonnet
 Read the task prompt and investigate the codebase to determine:
 1. Which files need to change and where
 2. What specifically needs to change in each file
-3. Which 1-3 files are the narrow-door **starting points** for this concept — the minimal entries from which an agent on a similar future task can navigate to the full relevant region via imports, references, and call sites
+3. Which 1-5 files are the narrow-door **starting points** for this concept — the minimal entries from which an agent on a similar future task can navigate to the full relevant region via imports, references, and call sites
 4. Spec gaps discovered during investigation (ambiguities, contradictions, or missing definitions not covered by the spec)
 
 ## Input
@@ -36,7 +36,7 @@ Read the task prompt and investigate the codebase to determine:
 4. Identify starting files — combine CLAUDE.md guidance + verified Index Hints + Glob for build/config markers to locate the affected module and its conventional entry files
 5. Form hypotheses about affected files and changes
 6. Verify hypotheses by reading additional files as needed
-7. Select 1-3 Starting Points: files from which an agent could navigate to the full relevant region via imports/references (not an exhaustive list — the narrow door)
+7. Select 1-5 Starting Points: files from which an agent could navigate to the full relevant region via imports/references (not an exhaustive list — the narrow door). Every selected path MUST already be tracked by git (`git ls-files` returns it); do not include files scheduled for creation.
 8. Report findings
 
 ## Output (returned to command)
@@ -47,17 +47,62 @@ Read the task prompt and investigate the codebase to determine:
 | # | File | Location | Change Type | Description |
 |---|------|----------|-------------|-------------|
 
-### Starting Points
-
-1-3 files that serve as narrow-door entries for this concept — future investigations on similar concepts can start here and reach the rest via imports/references. Subset of (or overlapping with) Affected Files.
-
-| # | File | Role | Why starting point |
-|---|------|------|--------------------|
-
 ### Spec Gaps
 
 | # | Priority | Requirement | Description |
 |---|----------|-------------|-------------|
 
 If no gaps: write "none".
+
+### Code Map Entry
+
+(See "Code Map Entry output contract" below. This section MUST be the final heading of the response, OR be omitted entirely if no valid entry can be produced.)
 ```
+
+## Code Map Entry output contract
+
+The final heading of the response MUST be `### Code Map Entry`, whose body contains exactly one fenced code block with the language identifier `code-map`. The block MUST contain exactly one line that is valid JSON parseable by `JSON.parse`.
+
+Full specification (schema, field semantics, positive/negative examples, self-check checklist): `../shared/references/code-map-format.md` sections "Schema", "Agent output contract".
+
+Strict rules (summary — the canonical source is `code-map-format.md`):
+
+1. **`### Code Map Entry` is the final heading of the response.** Nothing follows the closing fence except EOF or a trailing blank line.
+2. **Exactly one** `code-map` fenced block. Exactly one line inside. No embedded newlines.
+3. **Valid JSON**: double quotes only, no trailing comma, no single quotes, no comments.
+4. **`verified_at` MUST be `null`** — the command injects the git SHA at write time.
+5. **All keys present** in the fixed order: top-level `concept, aliases, tags, entries, verified_at`; entry `path, symbol, kind, anchor, summary`. Optional values are `null`, never omitted.
+6. **ASCII-only** in `concept`, `aliases`, `tags`.
+7. **Starting points MUST be existing, git-tracked files.**
+8. **Entries priority order**: index 0 = highest priority (most useful read-first file for a future investigator).
+
+### Concept derivation
+
+Rules: see `../shared/references/code-map-format.md` "Concept derivation" (task-implement flow section).
+
+### Self-check before emitting
+
+Walk through mentally before writing the fence:
+1. Does the line `JSON.parse` cleanly? (double-quote only, no trailing comma, proper escapes)
+2. Are all required keys present with correct types?
+3. Do all `pattern` constraints pass? (`concept`, `aliases`, `tags`, `path`, `symbol`, `anchor`, `summary`)
+4. Is `concept` distinct from every entry in `aliases`?
+5. Within `entries`, is every `(path, symbol)` pair unique?
+6. Does every `summary` end with a period, contain no newline, and have 1-179 chars + `.`?
+7. Is every `entries[].path` currently in `git ls-files`?
+8. Does every non-null `anchor` satisfy `start ≥ 1 ∧ start ≤ end ∧ end ≤ file line count`?
+9. Is `verified_at` exactly `null`?
+
+If any check fails, rewrite before emitting.
+
+### Aliases generation hint
+
+When producing `aliases`, consult the project's CLAUDE.md for domain vocabulary. Prefer terms already used in the codebase (e.g., CLAUDE.md-mentioned module names, glossary entries) over general-purpose synonyms. This pre-expansion at write time replaces read-time LLM query expansion; the quality of `aliases` directly affects future hit rate.
+
+### Skip condition
+
+If no valid entry can be produced (all candidate starting points are untracked, or the investigation concluded no useful narrow-door exists), **omit the `### Code Map Entry` section entirely**. The command treats this as a graceful skip.
+
+### Retry
+
+If the command returns your response with a validation rejection note, re-emit a corrected `### Code Map Entry` block. All other requirements from this prompt still apply.

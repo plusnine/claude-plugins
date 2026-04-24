@@ -65,8 +65,8 @@ bugfix → (spec-breakdown → task-implement)
 |---|---|---|---|
 | `/dev-workflow:spec-review {source}` | — | `{source}` (URL or file path) | `claude-output/{id}/spec-review/{source.md, review.md}` |
 | `/dev-workflow:spec-breakdown {id}` | — | `spec-review/source.md` or `bugfix/investigation-report.md` (FINAL) | `claude-output/{id}/spec-breakdown/{plan.md, tasks/*.md}` |
-| `/dev-workflow:task-implement {id} {nn}` | `task-implement:investigate` agent | `spec-breakdown/tasks/{nn}-*.md`, `spec-review/source.md` or `bugfix/investigation-report.md`, `_index/{repo-name}/code-map.md` (hints) | `claude-output/{id}/task-implement/{nn}-{plan,progress,spec-gaps,done,skipped}.md`, `_index/{repo-name}/code-map.md` (append) + branch/commit/draft PR/MR |
-| `/dev-workflow:bugfix {source}` | `bugfix:investigate` agent, `/dev-workflow:spec-breakdown`, `/dev-workflow:task-implement` | ticket URL, `_index/{repo-name}/code-map.md` (hints) | `claude-output/{id}/bugfix/{meta,investigation-report,spec-conflicts,done}.md`, `_index/{repo-name}/code-map.md` (append) |
+| `/dev-workflow:task-implement {id} {nn}` | `task-implement:investigate` agent | `spec-breakdown/tasks/{nn}-*.md`, `spec-review/source.md` or `bugfix/investigation-report.md`, `_index/{repo-name}/code-map.jsonl` (hints) | `claude-output/{id}/task-implement/{nn}-{plan,progress,spec-gaps,done,skipped}.md`, `_index/{repo-name}/code-map.jsonl` (append) + branch/commit/draft PR/MR |
+| `/dev-workflow:bugfix {source}` | `bugfix:investigate` agent, `/dev-workflow:spec-breakdown`, `/dev-workflow:task-implement` | ticket URL, `_index/{repo-name}/code-map.jsonl` (hints) | `claude-output/{id}/bugfix/{meta,investigation-report,spec-conflicts,done}.md`, `_index/{repo-name}/code-map.jsonl` (append) |
 
 ```mermaid
 flowchart LR
@@ -100,7 +100,7 @@ Each command is resumable. On re-run with the same `{id}`, resume position is de
 
 ### Code map (navigation index)
 
-Investigations accumulate a per-repo index of `concept → starting-point` mappings at `claude-output/_index/{repo-name}/code-map.md`. This layout supports both single-repo and multi-repo workspaces (where `claude-output/` lives at workspace level). Subsequent investigations consume verified entries to accelerate exploration. The index is a hint, not source of truth — entries are always re-verified against code before use.
+Investigations accumulate a per-repo index of `concept → starting-point` mappings at `claude-output/_index/{repo-name}/code-map.jsonl`. This layout supports both single-repo and multi-repo workspaces (where `claude-output/` lives at workspace level). Subsequent investigations consume verified entries to accelerate exploration. The index is a hint, not source of truth — entries are always re-verified against code before use. The file is AI-optimized (JSON Lines) and not intended for human reading.
 
 Operations are logged to `claude-output/_index/{repo-name}/code-map-metrics.log` (append-only, never loaded into agent context) for out-of-band analysis via grep/awk.
 
@@ -131,7 +131,7 @@ Skills write their output to `claude-output/` in **your project directory** (not
 claude-output/
 ├── _index/                        # project-scoped meta (not per-workflow)
 │   └── {repo-name}/               # per-repo (supports workspace- or repo-level claude-output)
-│       ├── code-map.md            # concept → starting-point navigation index
+│       ├── code-map.jsonl         # concept → starting-point navigation index (AI-optimized JSONL)
 │       └── code-map-metrics.log   # append-only metrics (out-of-band analysis, not loaded to agent)
 └── {id}/                          # per-workflow state
     ├── spec-review/
