@@ -128,7 +128,20 @@ If ⏭ Skipped entries exist: present them to the user before proceeding.
    User may request separation of push and PR/MR creation steps.
 6. After Create draft PR/MR completes (all rows in `{nn}-progress.md` ✅), auto-rename `{nn}-progress.md` → `{nn}-done.md`.
 
-On failure of any sub-step (commit / push / PR-MR create): keep that row as ⏳, append a brief error note (command + error message) to `{nn}-progress.md`, surface the error to the user, and exit. Re-run resumes at that ⏳ row per the Checkpoint table.
+On failure of any sub-step (commit / push / PR/MR create):
+
+1. Keep the failed row as ⏳ in `{nn}-progress.md`.
+2. Append a brief error note (executed command + stderr verbatim) to `{nn}-progress.md`.
+3. Surface the error to the user.
+4. Exit.
+
+Do **not**:
+- Auto-retry the failed sub-step.
+- Propose, attempt, or describe a fix (e.g., do not run `git pull --rebase`, `git push --force`, change git config, open a PR via the web UI, or modify the working tree).
+- Modify any other rows in `{nn}-progress.md`.
+- Roll back applied file changes or delete the working branch.
+
+The user is responsible for diagnosing the failure, resolving it manually outside the command, and re-running. Resumption picks up at the failed ⏳ row per the Checkpoint table.
 
 ## Checkpoint
 

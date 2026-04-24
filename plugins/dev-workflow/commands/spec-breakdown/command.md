@@ -64,6 +64,8 @@ Apply `spec-breakdown` skill criteria when decomposing tasks.
 Present `plan.md` to the user for approval before proceeding to Phase 2.
 If the user requests changes (e.g., merge or split tasks): update `plan.md` and re-present for approval. Repeat until approved.
 
+If a Phase 1 re-approval reduces the task count below the number of already-existing `tasks/{nn}-*.md` files, those excess files are orphans. The command does not auto-delete them. List the orphan files by name to the user and require manual deletion before proceeding. Do not enter Phase 2 until the file count in `tasks/` matches the task count in `plan.md`.
+
 ### Phase 2: Task Prompt Generation
 
 Generate one prompt file per task in `tasks/`. Filename: `{nn}-{kebab-case-task-name}.md` where `{nn}` is the task number from plan.md and `{kebab-case-task-name}` is derived from the task name.
