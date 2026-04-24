@@ -41,6 +41,16 @@ Spec excerpt: *"When the user taps Save, validate the form, persist the entry, a
 
 Note: actors cooperating in a single flow (user tap → form → repo → list) do NOT count as a split signal; the split here comes from three distinct operations.
 
+## Task dependency validation
+
+Before presenting `plan.md` for user approval, verify that the `Prerequisites` column across all tasks forms a directed acyclic graph (DAG):
+
+1. Treat each task row in `plan.md` as a node.
+2. For each `Prerequisites` cell containing `#NN`, treat it as a directed edge `NN → current task`.
+3. `none` produces no edges.
+4. A task listing itself (e.g., task 02 with `Prerequisites: #02`) counts as a cycle of length 1.
+5. If any cycle exists, do not present `plan.md` for approval. Surface the full cycle path to the user (format: `Cycle detected: 01 → 02 → 03 → 01`), require the user to fix `plan.md`, and re-validate before re-presenting.
+
 ## Gotchas
 
 - When source-type is `spec-review` and `review.md` Verdict is `FAIL`, do not proceed — stop and prompt the user to resolve 🔴 Required items first.

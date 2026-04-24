@@ -106,6 +106,8 @@ Operations are logged to `claude-output/_index/{repo-name}/code-map-metrics.log`
 
 Format and behavior: `plugins/dev-workflow/shared/references/code-map-format.md`.
 
+Distinct repos sharing the same basename collide on the same code-map (MVP scope-out — see `code-map-format.md` "Collision note" under `{repo-name}` resolution).
+
 ### CLAUDE.md Integration
 
 The investigate agents read the project root `CLAUDE.md` for codebase context. The plugin does not modify `CLAUDE.md` or require any specific section structure.
