@@ -106,13 +106,16 @@ Append a metrics line per `code-map-format.md` Metrics Log section (write trigge
 
 ### Step 3: Invoke spec-breakdown
 
-Execute the spec-breakdown flow for `{ticket-id}`.
+Read `../spec-breakdown/command.md` first to load the full process, then execute its complete flow for `{ticket-id}`.
 spec-breakdown will detect `bugfix/investigation-report.md` (Status: FINAL) as input.
+Phase 1 (plan.md approval) is mandatory — do not generate `tasks/` files until the user approves `plan.md`.
 
 ### Step 4: Invoke task-implement
 
 For each task in `claude-output/{ticket-id}/spec-breakdown/tasks/`:
-execute the task-implement flow for `{ticket-id} {nn}`.
+1. Read `../task-implement/command.md` first to load the full process.
+2. Execute its complete flow (Steps 0–6) for `{ticket-id} {nn}`.
+3. `{nn}-done.md` is **auto-created by task-implement Step 6 via rename from `{nn}-progress.md`** — never write `{nn}-done.md` manually.
 
 Wait until all tasks reach completion (`{nn}-done.md` or `{nn}-skipped.md` for every `{nn}`).
 
