@@ -108,6 +108,12 @@ execute the task-implement flow for `{ticket-id} {nn}`.
 
 Wait until all tasks reach completion (`{nn}-done.md` or `{nn}-skipped.md` for every `{nn}`).
 
+**Invariant — implementation always goes through task-implement**:
+All code changes and PR creation must be performed by invoking task-implement, without exception.
+This applies even when earlier steps (spec-breakdown, investigation, branch creation) are skipped
+due to re-fix runs or checkpoint resumption. Implementing code or creating PRs directly from this
+command — bypassing task-implement — is not permitted regardless of how simple the change appears.
+
 ### Step 5: Post-processing
 
 After all tasks complete:
