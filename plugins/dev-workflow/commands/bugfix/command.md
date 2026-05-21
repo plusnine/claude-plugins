@@ -29,6 +29,14 @@ Ask the user for the related feature ticket ID (the original feature/spec this b
   - Does not exist → inform user, proceed without spec reference
 - If none: proceed without spec reference
 
+### Resolve target repository (precondition)
+
+If `claude-output/{ticket-id}/meta.md` does not exist, run the detection algorithm in `../../shared/references/meta-format.md` ("Detection algorithm") and write meta.md.
+
+If meta.md exists, validate it per `../../shared/references/meta-format.md` ("Validation"). On validation failure, exit with an error in the user's configured language and require manual correction before re-run.
+
+This section runs between Step 0b and Step 1. All subsequent git/gh/glab operations follow the contract in `meta-format.md` "Reading".
+
 ### Step 1: Create branch
 
 Ask the user for the base branch to create the bugfix branch from.
@@ -139,7 +147,9 @@ After all tasks complete:
 
 ## Checkpoint
 
-On re-run, resume position is determined by existing files:
+On re-run, resume position is determined by existing files.
+
+**Precondition**: any resume position below assumes `claude-output/{ticket-id}/meta.md` exists per "Resolve target repository". If `{ticket-id}` has been resolved but `meta.md` is missing, run "Resolve target repository" before resuming from any other state.
 
 | State | Resume from |
 |-------|-------------|
