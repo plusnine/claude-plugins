@@ -90,7 +90,7 @@ Walk through mentally before writing the fence:
 5. Within `entries`, is every `(path, symbol)` pair unique?
 6. Does every `summary` end with a period, contain no newline, and have 1-179 chars + `.`?
 7. Is every `entries[].path` currently in `git ls-files`?
-8. Does every non-null `anchor` satisfy `start ≥ 1 ∧ start ≤ end ∧ end ≤ file line count`?
+8. Is every `anchor` either the string `"L<N>"` / `"L<N>-L<M>"` (e.g. `"L12-L80"`) or exactly `null` — never an object like `{"start":N,"end":M}`? And does every non-null `anchor` satisfy `start ≥ 1 ∧ start ≤ end ∧ end ≤ file line count`?
 9. Is `verified_at` exactly `null`?
 
 If any check fails, rewrite before emitting.

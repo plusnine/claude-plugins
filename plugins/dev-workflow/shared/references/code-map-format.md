@@ -213,7 +213,7 @@ Walk through mentally before writing the fence:
 5. Within `entries`, is every `(path, symbol)` pair unique?
 6. Does every `summary` end with a period, contain no newline, and ≤ 179 chars + `.`?
 7. Is every `entries[].path` currently present in `git ls-files`?
-8. Does every `anchor` satisfy `start ≤ end` and `end ≤ file line count`?
+8. Is every `anchor` either the string `"L<N>"` / `"L<N>-L<M>"` (e.g. `"L12-L80"`) or exactly `null` — never an object like `{"start":N,"end":M}`? And does every non-null `anchor` satisfy `start ≥ 1 ∧ start ≤ end ∧ end ≤ file line count`?
 9. Is `verified_at` exactly `null`?
 
 If any check fails, rewrite before emitting.
@@ -238,6 +238,7 @@ If any check fails, rewrite before emitting.
 6. **Key omission when value would be null** — e.g., emitting `"kind"` or `"anchor"` only for non-null values is wrong. All optional keys MUST always appear, with value `null` when not applicable.
 7. **Trailing comma or single quotes** — `{'concept':'x',}` is rejected.
 8. **Non-ASCII in concept/aliases/tags** — `"concept":"ダークモード"` is rejected; express in ASCII or translate.
+9. **`anchor` as object** — `"anchor":{"start":82,"end":1206}` is rejected. `anchor` MUST be the string `"L82-L1206"` (range) or `"L82"` (single line) or exactly `null`. Object form is not a valid schema variant.
 
 ## Write policy
 
@@ -271,7 +272,12 @@ On success, append the line to `code-map.jsonl` (creating the file and the `_ind
 
 ### Retry protocol
 
-On failure at any of layers 1-5, the command MUST retry exactly once by re-invoking the agent with the following additional prompt appended to its original input. **"Original input"** means the prompt and context originally passed to the investigate agent in the current command step — i.e., the invocation that produced the rejected output (Step 2 for the first invocation; the most recent gap-resolution re-invocation in loop cases). The retry prompt is appended verbatim after that original input. Substitute the `{...}` placeholders with actual values; all other text is passed verbatim.
+On failure at any of layers 1-5, the command MUST retry exactly once. The retry is **a fresh Agent invocation** whose prompt is constructed by concatenating:
+
+1. The full original input verbatim (the same prompt and context that produced the rejected output — Step 2 for the first invocation, or the most recent gap-resolution re-invocation in loop cases).
+2. The retry suffix below, appended verbatim with `{...}` placeholders substituted.
+
+Do **not** use a session continuation (e.g., `SendMessage` to the same agent) to deliver the retry suffix alone — the retried agent MUST receive the original input again so it can produce a properly contextualized correction. Do **not** invoke the agent with only the retry suffix or with a summarized version of the original input — hallucinations result.
 
 ```
 ## Previous output was rejected
@@ -288,7 +294,14 @@ Placeholder substitution:
 - `{error_message}`: the exact error message from the validator
 - `{excerpt}`: literal offending substring, max 200 chars, first occurrence
 
-If the second attempt also fails, the command MUST NOT append anything. Surface the final failure reason to the user, record `appended:0,reason:validation-failed` in the metrics log, and proceed with the remainder of the command step (downstream steps are not blocked by code-map append failure).
+If the second attempt also fails, the command MUST NOT append anything. Take all of the following actions before proceeding:
+
+1. Record `appended:0,reason:validation-failed` in the metrics log.
+2. Surface the final failure reason to the user, including:
+   - The failing layer number.
+   - The validator's error message.
+   - The offending substring (max 200 chars) from the **second-attempt** agent output, so the operator can see what was actually produced.
+3. Proceed with the remainder of the command step (downstream steps are not blocked by code-map append failure).
 
 ### Skip (not a failure)
 
