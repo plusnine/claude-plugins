@@ -98,6 +98,12 @@ Agents (`task-implement:investigate`, `bugfix:investigate`) are read-only: they 
 
 Each command is resumable. On re-run with the same `{id}`, resume position is derived from the files present in `claude-output/{id}/`. See the Checkpoint section in each command file for exact resume rules.
 
+### Target repository
+
+Each workflow `{id}` records the target git repository in `claude-output/{id}/meta.md` on its first run. All subsequent git, gh, glab, and Bitbucket-API operations route through the recorded `target-repository-path`. Detection is deterministic: one candidate repo at or directly below `$PWD` is recorded without prompt; multiple candidates require explicit user selection; zero candidates is an error. Ticket prefixes, spec content, and file names are never used to infer the target.
+
+Format and behavior: `plugins/dev-workflow/shared/references/meta-format.md`.
+
 ### Code map (navigation index)
 
 Investigations accumulate a per-repo index of `concept → starting-point` mappings at `claude-output/_index/{repo-name}/code-map.jsonl`. This layout supports both single-repo and multi-repo workspaces (where `claude-output/` lives at workspace level). Subsequent investigations consume verified entries to accelerate exploration. The index is a hint, not source of truth — entries are always re-verified against code before use. The file is AI-optimized (JSON Lines) and not intended for human reading.
@@ -136,6 +142,7 @@ claude-output/
 │       ├── code-map.jsonl         # concept → starting-point navigation index (AI-optimized JSONL)
 │       └── code-map-metrics.log   # append-only metrics (out-of-band analysis, not loaded to agent)
 └── {id}/                          # per-workflow state
+    ├── meta.md                    # target repository (id, target-repository, target-repository-path) — shared by all flows
     ├── spec-review/
     │   ├── source.md              # cached spec content
     │   └── review.md              # review result
@@ -150,7 +157,7 @@ claude-output/
     │   ├── {nn}-spec-gaps.md
     │   └── {nn}-done.md           # or {nn}-skipped.md
     └── bugfix/
-        ├── meta.md
+        ├── meta.md                # bugfix-specific (ticket-id, related-ticket-id, base-branch, branch-prefix)
         ├── investigation-report.md
         ├── spec-conflicts.md
         └── done.md

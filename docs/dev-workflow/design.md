@@ -89,6 +89,22 @@ Each decision notes what was chosen, the alternative considered, and trade-offs 
 - Adds token usage per query for expansion.
 - Expansion quality depends on LLM judgment, not a deterministic algorithm.
 
+### Explicit target repository over heuristic inference
+
+**Chosen**: Each workflow records the target git repository in `claude-output/{id}/meta.md` on first run. All subsequent git, gh, glab, and Bitbucket-API operations route through the recorded `target-repository-path`.
+
+**Alternative**: Inferring target from cues at every invocation (ticket prefix, spec body keywords, file paths in earlier checkpoint files).
+
+**Reasons**:
+- Workspace layouts containing multiple sibling repositories make cue-based inference unreliable; ticket prefixes are not always repo identifiers, and spec text mentions multiple repos.
+- One detection per `{id}` is cheap; persistent record means subsequent invocations have no ambiguity to resolve.
+- Eliminates a class of "wrong repo" errors that are expensive to undo (branch created in wrong repo, commit pushed to wrong remote).
+
+**Trade-offs accepted**:
+- An extra file (`meta.md`) per workflow.
+- Detection requires user interaction when multiple candidate repos exist at or directly below `$PWD`.
+- No automated migration for existing checkpoints without `meta.md`; the first re-run after upgrade runs detection.
+
 ### Metrics log outside agent context
 
 **Chosen**: Code-map operations append to `code-map-metrics.log`. The log is never loaded into any agent's context. Analysis is performed by the user via shell tools.
@@ -104,7 +120,7 @@ Each decision notes what was chosen, the alternative considered, and trade-offs 
 - No built-in analysis UI.
 - Log grows unbounded; manual rotation is expected.
 
-## Current Scope (v1.7.0)
+## Current Scope (v1.9.0)
 
 ### Included
 - Feature development flow: `spec-review` → `spec-breakdown` → `task-implement`
@@ -115,7 +131,7 @@ Each decision notes what was chosen, the alternative considered, and trade-offs 
   - Multi-layer invalidation (path existence, `git diff` against `verified_at`, commit reachability)
   - User-facing summaries at read/write touchpoints
   - Append-only metrics log
-- Multi-repo workspace support (`{repo-name}` resolved per invocation via `git rev-parse --show-toplevel`)
+- Multi-repo workspace support (target repository explicitly recorded per-`{id}` in `claude-output/{id}/meta.md`; all repository-bound CLI operations route through the recorded `target-repository-path`)
 - `shared/references/` protocol layer
 
 ### Not included
