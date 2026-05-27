@@ -20,13 +20,15 @@ This file is **AI/LLM-optimized** and not intended for human reading or hand-edi
 
 ### `{repo-name}` resolution
 
-`claude-output/` may live at workspace level (parent of multiple repos) or inside a single repo. `{repo-name}` is resolved per-invocation so both layouts are supported.
+`{repo-name}` is determined per-invocation, in this order:
 
-- `basename $(git rev-parse --show-toplevel)` lowercased
+1. If `claude-output/{id}/meta.md` exists for the current `{id}`, use its `target-repository` field. The oracle for code-map operations is the repository at `target-repository-path`, accessed via `git -C "{target-repository-path}"`. See `meta-format.md`.
+2. Otherwise: `basename $(git -C "$PWD" rev-parse --show-toplevel)` lowercased, with `$PWD` as the oracle.
+3. If both fail (no meta.md AND `$PWD` is not in a git repo), skip all code-map read and write operations entirely.
 
 No further normalization — `My_Repo-2` becomes `my_repo-2`. Filesystem-safe, information-preserving.
 
-**Git required**: code-map operations require a git repository (commits are the verification oracle). If `git rev-parse --show-toplevel` fails, skip all code-map read and write operations entirely — the command proceeds without hints and does not persist entries.
+**Git required**: code-map operations require a git repository (commits are the verification oracle). The repository is identified per resolution step above.
 
 Collision note: two distinct repos with identical basename (rare) would share a code-map. Not handled in MVP.
 

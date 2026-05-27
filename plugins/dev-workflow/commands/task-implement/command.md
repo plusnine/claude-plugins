@@ -26,6 +26,14 @@ If neither exists → exit with message:
 If `investigation-report.md` exists but Status is DRAFT (or missing): exit with message:
 > Bugfix investigation is not yet finalized. Complete `/dev-workflow:bugfix {id}` through Step 2c first.
 
+### Resolve target repository (precondition)
+
+If `claude-output/{id}/meta.md` does not exist, run the detection algorithm in `../../shared/references/meta-format.md` ("Detection algorithm") and write meta.md.
+
+If meta.md exists, validate it per `../../shared/references/meta-format.md` ("Validation"). On validation failure, exit with an error in the user's configured language and require manual correction before re-run.
+
+This section runs between Step 0 and Step 1. All subsequent git/gh/glab operations follow the contract in `meta-format.md` "Reading".
+
 ### Step 1: Load task
 
 Read `claude-output/{id}/spec-breakdown/tasks/{nn}-*.md`.
@@ -90,7 +98,7 @@ Apply Sub-task Split Criteria from `task-implement/SKILL.md`:
 Read `references/pr-guidelines.md` Branch Naming section for rules. This step owns only orchestration — all naming/verification rules live in that file.
 
 Verify the current branch is the parent branch per pr-guidelines.md Branch Naming. If not → exit with message:
-> Parent branch not found. Create and checkout the parent branch first (e.g. `git checkout -b feature/{id}`), then re-run this command.
+> Parent branch not found in `{target-repository-path}`. Create and checkout the parent branch first (e.g. `git -C "{target-repository-path}" checkout -b feature/{id}`), then re-run this command.
 
 If pr-guidelines.md Branch Naming resolves to "use parent branch directly" (single-task case): skip branch creation. Proceed to Step 5.
 
@@ -145,7 +153,9 @@ The user is responsible for diagnosing the failure, resolving it manually outsid
 
 ## Checkpoint
 
-On re-run, resume position is determined by existing files:
+On re-run, resume position is determined by existing files.
+
+**Precondition**: any resume position below assumes `claude-output/{id}/meta.md` exists per "Resolve target repository". If `meta.md` is missing, run "Resolve target repository" before resuming from any other state.
 
 | State | Resume from |
 |-------|-------------|

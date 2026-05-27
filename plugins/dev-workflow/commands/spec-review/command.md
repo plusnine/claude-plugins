@@ -14,7 +14,9 @@ Where `{source}` is a URL (Confluence, Notion, etc.) or a local file path to the
 
 ## Checkpoint
 
-On re-run, resume position is determined by existing files:
+On re-run, resume position is determined by existing files.
+
+**Precondition**: any resume position below assumes `claude-output/{id}/meta.md` exists per "Resolve target repository". If `{id}` has been resolved but `meta.md` is missing, run "Resolve target repository" before resuming from any other state.
 
 | State | Resume from |
 |-------|-------------|
@@ -24,6 +26,14 @@ On re-run, resume position is determined by existing files:
 | Otherwise | Step 1 |
 
 ## Process
+
+### Resolve target repository (precondition)
+
+If `claude-output/{id}/meta.md` does not exist, run the detection algorithm in `../../shared/references/meta-format.md` ("Detection algorithm") and write meta.md.
+
+If meta.md exists, validate it per `../../shared/references/meta-format.md` ("Validation"). On validation failure, exit with an error in the user's configured language and require manual correction before re-run.
+
+This section runs after Step 1 (which resolves `{id}`) and before any subsequent step. Place this conceptually between Step 1 and Step 2 in the flow.
 
 ### Step 1: Fetch and resolve output ID
 

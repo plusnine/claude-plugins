@@ -25,7 +25,9 @@ Written to `claude-output/{id}/spec-breakdown/`:
 
 ## Checkpoint
 
-On re-run, resume position is determined by existing files:
+On re-run, resume position is determined by existing files.
+
+**Precondition**: any resume position below assumes `claude-output/{id}/meta.md` exists per "Resolve target repository". If `meta.md` is missing, run "Resolve target repository" before resuming from any other state.
 
 | State | Resume from |
 |-------|-------------|
@@ -35,6 +37,14 @@ On re-run, resume position is determined by existing files:
 | Otherwise | Phase 1 |
 
 ## Process
+
+### Resolve target repository (precondition)
+
+If `claude-output/{id}/meta.md` does not exist, run the detection algorithm in `../../shared/references/meta-format.md` ("Detection algorithm") and write meta.md.
+
+If meta.md exists, validate it per `../../shared/references/meta-format.md` ("Validation"). On validation failure, exit with an error in the user's configured language and require manual correction before re-run.
+
+This section runs before Phase 1.
 
 ### Phase 1: Coarse Task Decomposition
 
