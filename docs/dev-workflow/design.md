@@ -186,8 +186,11 @@ Specific thresholds are not stated here: hit rate, staleness, and warm-up behavi
 - `README.md` — installation and usage.
 - `plugins/dev-workflow/.claude-plugin/plugin.json` — manifest.
 - `plugins/dev-workflow/commands/*/command.md` — orchestration entry points.
+- `plugins/dev-workflow/skills/*/SKILL.md` — skill specifications (purpose, input/output contract).
 - `plugins/dev-workflow/agents/*.md` — investigate agent definitions.
 - `plugins/dev-workflow/shared/references/code-map-format.md` — code-map protocol.
+- `plugins/dev-workflow/shared/references/meta-format.md` — meta.md format (target repository, ticket id, etc.).
+- `plugins/dev-workflow/shared/references/spec-gaps-format.md` — spec gap / conflict priority levels and resolution log structure.
 
 ### External concepts
 - Query expansion (information retrieval): enriching a query with semantically related terms before matching. Origins in classical IR literature (Rocchio, 1971, and subsequent).
