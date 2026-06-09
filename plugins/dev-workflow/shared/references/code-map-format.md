@@ -254,21 +254,54 @@ The writing orchestrator is the command, not the agent. The agent emits a `### C
 
 ### Write pipeline (multi-layer validation)
 
-Every write goes through six layers. Failure at any layer triggers retry (see below).
+Every write goes through six layers. Failure at any layer triggers retry (see below). Layers 4 and 5 include **auto-fix sub-steps** that automatically correct safe-to-default omissions and common path-prefix mistakes before validation, reducing reject rates for benign agent output drift while keeping the schema strict where intent cannot be inferred.
 
 1. **Extraction**: from the agent's response, locate exactly one `### Code Map Entry` heading whose body contains exactly one fenced block with language identifier `code-map`.
 2. **Line structure**: the fence contains exactly one non-empty line, ≤ 4096 bytes, no embedded newlines or control characters other than the single terminating context.
 3. **JSON syntax**: the line `JSON.parse`s without error.
-4. **Schema conformance**: the parsed object validates against the JSON Schema above (type, pattern, enum, required, `additionalProperties:false`).
-5. **Semantic validation**:
-   - `concept` does not appear in `aliases`
-   - within `entries`, `(path, symbol)` tuple is unique across entries
-   - for each `entries[].path`: `git ls-files -- {path}` returns a non-empty result (tracked by git). The path MUST be passed as a separate argument (after `--`), never interpolated into a shell command string, to prevent injection and to handle spaces / special characters safely.
-   - for each `entries[].anchor` (when non-null): parse `L{start}(-L{end})?` and verify `start ≥ 1 ∧ end ≥ start ∧ end ≤ (wc -l -- {path})`. Same path-argument discipline as above.
-   - every `entries[].summary` is distinct from every other entry's summary within the same record
+4. **Schema conformance** (with auto-fix):
+   - **4a. Duplicate-key check** (on the raw JSON string, before `JSON.parse`'s last-key-wins semantics take effect): for each object literal in the source line, verify no key name appears more than once. If any duplicate is found, **reject** at this layer — the agent's intended value is ambiguous and cannot be safely auto-fixed.
+   - **4b. Auto-fix safe-defaultable omissions** (mutates the parsed object before validation):
+     - top-level `verified_at` missing → insert as `null` (Layer 6 will overwrite with the git SHA)
+     - top-level `aliases` missing → insert as `[]` (spec explicitly permits empty array)
+     - top-level `tags` missing → insert as `[]` (spec explicitly permits empty array)
+     - `entries[].symbol` missing → insert as `null` (spec permits string or null)
+     - `entries[].kind` missing → insert as `null` (spec permits enum or null)
+     - `entries[].anchor` missing → insert as `null` (spec permits string or null — file-level hint)
+
+     Only these six keys are auto-filled. Missing `concept`, `entries`, `entries[].path`, or `entries[].summary` is **not** auto-fixed and falls through to 4c as a schema violation — these carry agent intent that cannot be defaulted without distorting the record.
+   - **4c. JSON Schema validation**: the (possibly auto-fixed) parsed object validates against the JSON Schema above (type, pattern, enum, required, `additionalProperties:false`).
+5. **Semantic validation** (with auto-fix):
+   - **5a. Path auto-normalization**: for each `entries[].path`, if all three conditions hold simultaneously, replace the path with its stripped form:
+     1. the path starts with `<repo-basename>/` (where `<repo-basename>` is the resolved `target-repository` per `meta-format.md`, i.e. the lowercased basename of the working-tree root)
+     2. `git ls-files -- {stripped}` returns non-empty
+     3. `git ls-files -- {original}` returns empty
+
+     If any normalization fires, append `path normalized: stripped '<repo>/' prefix in N entries` to the success surface (see "Surface outcomes" below) so operators detect agent-prompt drift without it being silently masked. Other paths pass through unchanged.
+   - **5b. Path existence**: for each (possibly normalized) `entries[].path`, `git ls-files -- {path}` returns a non-empty result. The path MUST be passed as a separate argument (after `--`), never interpolated into a shell command string, to prevent injection and to handle spaces / special characters safely.
+   - **5c. Anchor range check**: for each `entries[].anchor` (when non-null), parse `L{start}(-L{end})?` and verify `start ≥ 1 ∧ end ≥ start ∧ end ≤ (wc -l -- {path})`. Same path-argument discipline as above.
+   - **5d. Concept-aliases disjointness**: `concept` does not appear in `aliases`.
+   - **5e. Entry pair uniqueness**: within `entries`, the `(path, symbol)` tuple is unique across entries.
+   - **5f. Summary uniqueness**: every `entries[].summary` is distinct from every other entry's summary within the same record.
 6. **Verified-at injection**: replace `"verified_at":null` with `"verified_at":"{git rev-parse --short HEAD}"`.
 
 On success, append the line to `code-map.jsonl` (creating the file and the `_index/{repo-name}/` directory if needed). Ensure the appended line ends with `\n`.
+
+### Surface outcomes
+
+The command surfaces a single line to the user describing the write result. Surrounding commands (`bugfix/command.md` Step 2c, `task-implement/command.md` Step 3.5) reuse these exact strings.
+
+Success base form:
+- `Index: appended '{concept}' → {N entries} @ {verified_at}`
+
+Auto-fix annotations (appended to the success line, comma-separated, in this order, only when applicable):
+- `auto-filled: <comma-separated key list>` — when Layer 4b inserted at least one default value
+- `path normalized: stripped '<repo>/' prefix in N entries` — when Layer 5a stripped a prefix in N entries
+
+Other outcomes:
+- `Index: skipped — not a git repo` — when the read/write path is skipped per "Location" precondition
+- `Index: skipped — no entry block` — when the agent omitted the `### Code Map Entry` section (graceful skip)
+- `Index: write rejected — {final reason}` — when the write pipeline rejected after the single allowed retry
 
 ### Retry protocol
 

@@ -70,11 +70,30 @@ Strict rules (summary — the canonical source is `code-map-format.md`):
 1. **`### Code Map Entry` is the final heading of the response.** Nothing follows the closing fence except EOF or a trailing blank line.
 2. **Exactly one** `code-map` fenced block. Exactly one line inside. No embedded newlines.
 3. **Valid JSON**: double quotes only, no trailing comma, no single quotes, no comments.
-4. **`verified_at` MUST be `null`** — the command injects the git SHA at write time.
-5. **All keys present** in the fixed order: top-level `concept, aliases, tags, entries, verified_at`; entry `path, symbol, kind, anchor, summary`. Optional values are `null`, never omitted.
+4. **`verified_at` MUST be `null`** — the command injects the git SHA at write time. Output the literal `null` (no quotes); never a string, never omitted.
+5. **All keys present** in the fixed order: top-level `concept, aliases, tags, entries, verified_at`; entry `path, symbol, kind, anchor, summary`. Optional values are `null` (or `[]` for array fields), never omitted.
 6. **ASCII-only** in `concept`, `aliases`, `tags`.
 7. **Starting points MUST be existing, git-tracked files.**
 8. **Entries priority order**: index 0 = highest priority (most useful read-first file for a future investigator).
+9. **`path` is repo-root relative** — never include the repo basename prefix (e.g., do not write `MyRepo/src/...`; write `src/...`). Each path MUST resolve via `git ls-files -- {path}` from the repo root.
+10. **No duplicate keys** within any JSON object — each key (top-level or entry-level) MUST appear at most once. `JSON.parse` silently accepts duplicates (last-key-wins), but the write pipeline explicitly rejects them.
+
+### Canonical output structure
+
+Every output object MUST follow this structure exactly. All keys shown below are present in every emission, in this order, even when the value is `null` or `[]`.
+
+- Top-level keys (in order): `concept`, `aliases`, `tags`, `entries`, `verified_at`
+- Entry-object keys (in order): `path`, `symbol`, `kind`, `anchor`, `summary`
+
+Defaults when no domain-specific value applies:
+- `aliases` with no synonyms → `[]`
+- `tags` with no labels → `[]`
+- `entries[].symbol` for file-level hints → `null`
+- `entries[].kind` if no category fits → `null`
+- `entries[].anchor` for file-level (no line range) hints → `null`
+- `verified_at` → ALWAYS the literal `null` (the command injects the SHA at write time)
+
+Never omit a key. Never write `""` in place of `null`. Never write `[null]` instead of `[]`.
 
 ### Concept derivation
 
@@ -92,6 +111,8 @@ Walk through mentally before writing the fence:
 7. Is every `entries[].path` currently in `git ls-files`?
 8. Is every `anchor` either the string `"L<N>"` / `"L<N>-L<M>"` (e.g. `"L12-L80"`) or exactly `null` — never an object like `{"start":N,"end":M}`? And does every non-null `anchor` satisfy `start ≥ 1 ∧ start ≤ end ∧ end ≤ file line count`?
 9. Is `verified_at` exactly `null`?
+10. Do all top-level keys appear exactly once, and do all keys within each `entries[]` object appear exactly once? (No duplicates within any single object.)
+11. Does any `entries[].path` start with the repo basename (e.g. `MyRepo/`)? It must not — paths are repo-root relative.
 
 If any check fails, rewrite before emitting.
 
