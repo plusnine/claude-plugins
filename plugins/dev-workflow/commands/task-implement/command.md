@@ -73,19 +73,23 @@ If 🔴 Required gaps exist:
 
 ### Step 3.5: Update code-map
 
-After Step 3 (investigation validated by the user), run the Write pipeline per `../../shared/references/code-map-format.md` Write policy. Skip entirely if not in a git repo.
+After Step 3 (investigation validated by the user), save the investigate agent's reply (the most recent invocation, including any retry from Step 3 gap-resolution loop) verbatim to `claude-output/{id}/task-implement/_agent-reply-{nn}.md`, then invoke the `code-map-write` skill with the following args:
 
-1. **v1 legacy detection** (first v2 write only): if `claude-output/_index/{repo-name}/code-map.md` exists, present a rename plan to the user via the Write Safety Gate per `code-map-format.md` "v1 → v2 migration": `code-map.md` → `code-map.v1.deprecated.md` (timestamped suffix on collision). Proceed with the rename on approval; if rejected, continue with the v2 write leaving the v1 file untouched.
-2. **Extract, validate, and append** per `code-map-format.md` Write pipeline (six layers: extraction, line structure, JSON syntax, schema, semantic, verified_at injection). The source is the `### Code Map Entry` block at the end of the investigate agent's reply. On layer 1-5 failure, retry exactly once per Retry protocol — the retry MUST be a fresh Agent invocation with the original input plus the retry suffix concatenated (not a session continuation; see `code-map-format.md` "Retry protocol"). On second failure, surface the rejection reason and skip the append (downstream steps continue).
-3. **Skip (no agent block)**: if the agent response contains no `### Code Map Entry` heading, treat as graceful skip — surface `Index: skipped — no entry block` and continue.
+```
+target-repository-path: <value of target-repository-path from claude-output/{id}/meta.md>
+agent-reply-source: claude-output/{id}/task-implement/_agent-reply-{nn}.md
+ref: {id}
+task: {nn}
+```
 
-Surface outcomes:
-- Appended: `Index: appended '{concept}' → {N entries} @ {verified_at}`
-- Skipped (no git repo): `Index: skipped — not a git repo`
-- Skipped (no block): `Index: skipped — no entry block`
-- Rejected (validation failed after retry): `Index: write rejected — {final reason}`
+The skill executes the full write pipeline (v1 legacy migration, 6-layer validation with auto-fix, append, metrics logging) per `../../shared/references/code-map-format.md` and returns a single-line surface message. Display the message to the user verbatim.
 
-Append a metrics line per `code-map-format.md` Metrics Log section (write trigger) reflecting the outcome.
+**Retry orchestration** (command-side, kept here because it requires re-invoking the investigate agent): if the returned message starts with `Index: write rejected`, perform exactly one retry per `../../shared/references/code-map-format.md` "Retry protocol":
+1. Re-invoke the `task-implement:investigate` agent with the original Step 2 input plus the retry suffix (substituting the failing layer, error message, and offending substring from the rejection).
+2. Save the retry reply to `claude-output/{id}/task-implement/_agent-reply-{nn}.retry.md`.
+3. Re-invoke the `code-map-write` skill with `agent-reply-source: claude-output/{id}/task-implement/_agent-reply-{nn}.retry.md`. Display the returned message to the user.
+
+Do not retry a third time. Downstream steps (Step 4 onward) proceed regardless of the code-map write outcome.
 
 ### Step 4: Evaluate task size
 
@@ -177,8 +181,8 @@ When `{nn}-spec-gaps.md` exists with Status: RESOLVED, re-invoke Step 2 to resto
 
 ### Note on code-map reads and writes
 
-Code-map operations happen within command steps (read at Step 2, write at Step 3.5) and do not produce their own persistent state files. On resumption:
+Code-map operations happen within command steps (read at Step 2, write at Step 3.5 via the `code-map-write` skill). The only persistent state files produced are the transient `claude-output/{id}/task-implement/_agent-reply-{nn}.md` and `_agent-reply-{nn}.retry.md` written as skill inputs (safely overwritable across resumptions, scoped per task by `{nn}`). On resumption:
 
 - Step 2 re-reads the code-map fresh — fresh dedup, fresh GC of stale entries, fresh verification. Idempotent per reader contract
-- Step 3.5 may re-append the same entry — duplicates are harmless: dedup at read time picks the most-recent `verified_at` and removes older rows per `../../shared/references/code-map-format.md` reader contract
-- If any code-map append fails (e.g., filesystem error), re-run simply retries the append; no separate recovery needed
+- Step 3.5 may re-invoke the skill with the same input — duplicates in the appended JSONL are harmless: dedup at read time picks the most-recent `verified_at` and removes older rows per `../../shared/references/code-map-format.md` reader contract
+- If any code-map append fails (e.g., filesystem error), re-run simply re-invokes the skill; no separate recovery needed
